@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">FFEKommando</string>
+    <string name="main_bStartContentDescription">TODO</string>
+    <string name="main_bCameraContentDescription">todo</string>
 </resources>
