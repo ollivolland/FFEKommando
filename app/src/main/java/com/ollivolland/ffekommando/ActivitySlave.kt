@@ -15,6 +15,7 @@ import java.util.*
 class ActivitySlave : AppCompatActivity() {
 
     var lastStart:Long = 0
+    lateinit var wakeLock: WakeLock
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,5 +46,11 @@ class ActivitySlave : AppCompatActivity() {
                     Log.w("TAG", "loadPost:onCancelled", databaseError.toException())
                 }
             })
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        wakeLock.release()
     }
 }

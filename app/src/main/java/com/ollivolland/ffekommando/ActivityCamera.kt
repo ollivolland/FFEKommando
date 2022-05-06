@@ -1,12 +1,8 @@
 package com.ollivolland.ffekommando
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
-import android.hardware.camera2.CameraAccessException
-import android.hardware.camera2.CameraManager
 import android.media.CamcorderProfile
-import android.media.CameraProfile
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
@@ -14,9 +10,9 @@ import android.os.Bundle
 import android.os.Environment
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import org.jcodec.containers.mp4.boxes.MetaValue
 import org.jcodec.movtool.MetadataEditor
@@ -30,10 +26,10 @@ import kotlin.math.max
 class ActivityCamera : AppCompatActivity() {
     lateinit var recorder: MediaRecorder
     lateinit var  holder: SurfaceHolder
-    //lateinit var bPlay: ImageButton
+    lateinit var bStop: ImageButton
     var  recording = false
     private val myCallBack = MyCallBack()
-    var path = ""
+    var fileName = ""; var path = ""
     var thread:Thread? = null
     var dateStarted: Date? = null
     var dateCommand: Date? = null
@@ -46,9 +42,9 @@ class ActivityCamera : AppCompatActivity() {
 
         val cameraView = findViewById<SurfaceView>(R.id.start_sCameraView)
 
-//        bPlay = findViewById(R.id.start_bPlay)
-//        bPlay.isEnabled = false
-//        bPlay.setOnClickListener { startStop() }
+        bStop = findViewById(R.id.start_bStop)
+        bStop.isEnabled = false
+        bStop.setOnClickListener { startStop() }
 
         val tText:TextView = findViewById(R.id.camera_tText)
         tText.text = tText.text.toString() + "\ndelay = ${intent.extras!!.getLong(UNIX_TIME_START) - System.currentTimeMillis()} ms"
@@ -59,28 +55,28 @@ class ActivityCamera : AppCompatActivity() {
 
         //  Oncreated
         myCallBack.onCreated.add {
-//            bPlay.isEnabled = true
-//            bPlay.setImageResource(R.drawable.ic_outline_play_arrow_32)
-
             recorder.setPreviewDisplay(holder.surface)
             recorder.prepare()
             startStop()
+
+            bStop.isEnabled = true
+            bStop.visibility = View.VISIBLE
         }
 
         //  Ondestroyed
         myCallBack.onDestroyed.add {
             if (recording) startStop()
-            recorder.release()
-            mp.release()
 
             val mediaMeta: MetadataEditor = MetadataEditor.createFrom(File(path))
             val meta: MutableMap<String, MetaValue> = mediaMeta.keyedMeta
-            for ((key, value) in meta.entries)  println("$key: $value")
 
             val json = JSONObject()
             json.put("dateVideoStart", formatToMillis.format(dateStarted!!))
             json.put("isHasCommand", dateCommand != null)
-            if(dateCommand != null) json.put("dateCommand", formatToMillis.format(dateCommand!!))
+            if (dateCommand != null) json.put(
+                "dateCommand",
+                formatToMillis.format(dateCommand!!)
+            )
 
             meta["com.apple.quicktime.title"] = MetaValue.createString(json.toString(4)) //  system.title will not work
             meta["com.apple.quicktime.album"] = MetaValue.createString("olli album =>  ${formatToMillis.format(dateStarted!!)}")
@@ -91,6 +87,9 @@ class ActivityCamera : AppCompatActivity() {
             mediaMeta.save(false) // fast mode is off
 
             for ((key, value) in mediaMeta.keyedMeta.entries) println("$key: $value")
+
+            recorder.release()
+            mp.release()
         }
 
         holder = cameraView.holder
@@ -115,8 +114,9 @@ class ActivityCamera : AppCompatActivity() {
         //  File
         val dir = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).path}/Camera"
         if(!File(dir).exists()) File(dir).mkdirs()
+        path = "$dir/${intent.extras!!.getString(FILE_NAME)}"
 
-        recorder.setOutputFile("$dir/${intent.extras!!.getString(FILE_NAME)}")
+        recorder.setOutputFile(path)
         recorder.setMaxDuration(300_000) // 5 minutes
         recorder.setMaxFileSize(2_000_000_000L) //  2gb
 
@@ -133,46 +133,42 @@ class ActivityCamera : AppCompatActivity() {
     }
 
     private fun startStop() {
-        if(thread == null)
+        if(thread != null)
         {
-            thread = Thread {
-                try {
-                    //  wait until time
-                    Thread.sleep(max(intent.extras!!.getLong(UNIX_TIME_START) - System.currentTimeMillis(), 0))
-
-                    recorder.start()    //  HEAVY AS FUCK, takes 750ms
-                    dateStarted = Date()
-                    if(intent.extras!!.getBoolean(IS_COMMAND)) mp.start()
-
-                    Thread.sleep(18_000)
-
-                    if(intent.extras!!.getBoolean(IS_COMMAND)) dateCommand = Date()
-
-                    Thread.sleep(60_000)
-
-                    startStop()
-                } catch (e: Exception) { println("thread interrupted") }
-            }
-            thread!!.start()
-
-            //flashlight
-            Thread {
-                CameraH.switchFlashLight(this, true)
-                Thread.sleep(1000)
-                CameraH.switchFlashLight(this, false)
-            }.start()
-        } else {
             thread!!.interrupt()
-            thread = null
             recorder.stop()
             mp.stop()
-            mp.reset()
 
             finish()
+            return
         }
 
-        recording = !recording
-//        bPlay.setImageResource(if (recording) R.drawable.ic_outline_stop_32 else R.drawable.ic_outline_play_arrow_32)
+        thread = Thread {
+            try {
+                //  wait until time
+                Thread.sleep(max(intent.extras!!.getLong(UNIX_TIME_START) - System.currentTimeMillis(), 0))
+
+                recorder.start()    //  HEAVY AS FUCK, takes 750ms
+                dateStarted = Date()
+                if(intent.extras!!.getBoolean(IS_COMMAND)) mp.start()
+
+                Thread.sleep(18_000)
+
+                if(intent.extras!!.getBoolean(IS_COMMAND)) dateCommand = Date()
+
+                Thread.sleep(intent.extras!!.getLong(TIME_VIDEO))
+
+                startStop()
+            } catch (e: Exception) { println("thread interrupted") }
+        }
+        thread!!.start()
+
+        //flashlight
+        Thread {
+            CameraH.switchFlashLight(this, true)
+            Thread.sleep(1000)
+            CameraH.switchFlashLight(this, false)
+        }.start()
     }
 
     class MyCallBack : SurfaceHolder.Callback{
@@ -197,14 +193,16 @@ class ActivityCamera : AppCompatActivity() {
         const val FILE_NAME = "FILE_NAME"
         const val UNIX_TIME_START = "unixTimeStart"
         const val VIDEO_PROFILE = "videoProfile"
+        const val TIME_VIDEO = "videoTime"
 
-        fun startCamera(activity:Activity, isCommand: Boolean, unixTimeStartCamera:Long, fileName: String)
+        fun startCamera(activity:Activity, isCommand: Boolean, unixTimeStartCamera:Long, fileName: String, timeVideo:Long = 60_000L)
         {
             activity.startActivity(Intent(activity, ActivityCamera::class.java).apply {
                 putExtra(IS_COMMAND, isCommand)
                 putExtra(VIDEO_PROFILE, CamcorderProfile.QUALITY_1080P)
                 putExtra(UNIX_TIME_START, unixTimeStartCamera)
                 putExtra(FILE_NAME, fileName)
+                putExtra(TIME_VIDEO, timeVideo)
             })
         }
     }

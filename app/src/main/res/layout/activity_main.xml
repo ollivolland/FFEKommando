@@ -19,7 +19,7 @@
         <Button android:id="@+id/main_bMaster"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:text="Meister"
+            android:text="Kamera Meister"
             android:textSize="10sp"
             android:src="@drawable/ic_launcher_foreground"
             android:contentDescription="@string/main_bStartContentDescription"
@@ -30,7 +30,7 @@
             android:layout_height="100dp"
             android:layout_marginStart="150dp"
             android:textSize="10sp"
-            android:text="Sklave"
+            android:text="Kamera Sklave"
             android:src="@drawable/ic_launcher_foreground"
             android:contentDescription="@string/main_bCameraContentDescription"
             />
