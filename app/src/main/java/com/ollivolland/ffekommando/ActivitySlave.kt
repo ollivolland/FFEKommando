@@ -2,19 +2,13 @@ package com.ollivolland.ffekommando
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.widget.Button
 import android.widget.TextView
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
 import java.util.*
 
 class ActivitySlave : AppCompatActivity() {
 
     var lastStart:Long = 0
+    var text:String = ""
     lateinit var wakeLock: WakeLock
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,28 +18,49 @@ class ActivitySlave : AppCompatActivity() {
         val masterId = intent.extras!!.getString("MASTER_ID")!!
 
         val tText:TextView = findViewById(R.id.slave_tText)
-        tText.text = tText.text.toString() + "\n\nmaster = $masterId";
+        text = "waiting for command\n\nmaster = $masterId";
 
-        Firebase.database.reference.child("masters").child(masterId).child("startCamera").addValueEventListener(
-            object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    if(!dataSnapshot.exists()) return
+        val db = DataBaseWrapper(this)
 
-                    val newVal = dataSnapshot.value as Long
+        db.listen("masters/$masterId/sessions") { dataSnapshot ->
+            if(!dataSnapshot.hasChildren()) return@listen
 
-                    if(newVal != lastStart) {
-                        ActivityCamera.startCamera(this@ActivitySlave, false, newVal,
-                            "VID_${Globals.formatToSeconds.format(Date(newVal))}_${Globals.getDeviceId(this@ActivitySlave)}.mp4")
+            val child = dataSnapshot.children.maxByOrNull { x -> x.key!! }!!
+            val timeStartCamera = child.child("correctedTimeCameraStart").value as Long
+            val command = child.child("command").value as String
 
-                        lastStart = newVal
-                    }
+            val withConfig = CameraInstance(
+                isCamera = CameraConfig.default.isCamera,
+                isCommand = CameraConfig.default.isCommand,
+                commandFullName = command,
+                correctedTimeStartCamera = timeStartCamera,
+                correctedTimeCommandStart = child.child("correctedTimeCommandStart").value as Long,
+                correctedTimeCommandExecuted = child.child("correctedTimeCommandExecuted").value as Long,
+                millisVideoLength = child.child("millisVideoLength").value as Long,
+            )
+
+            if(timeStartCamera > ActivityMain.correctedTime && timeStartCamera != lastStart) {
+                ActivityCamera.startCamera(this@ActivitySlave, withConfig)
+
+                lastStart = timeStartCamera
+            }
+        }
+
+        wakeLock = WakeLock(this)
+
+        //  Ui Loop
+        Thread {
+            while (!this.isDestroyed)
+            {
+                runOnUiThread {
+                    tText.text = "$text" +
+                            "\n\ndelay to GPS satellite = ${ActivityMain.delayList.mean().format(2)} ms" +
+                            " ± ${ActivityMain.delayList.stdev().format(2)} ms"
                 }
 
-                override fun onCancelled(databaseError: DatabaseError) {
-                    // Getting Post failed, log a message
-                    Log.w("TAG", "loadPost:onCancelled", databaseError.toException())
-                }
-            })
+                Thread.sleep(50)
+            }
+        }.start()
     }
 
     override fun onDestroy() {

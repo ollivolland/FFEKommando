@@ -2,18 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.ollivolland.ffekommando">
 
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.CAMERA" />
-
     <uses-feature
         android:name="android.hardware.camera"
         android:required="true" />
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <uses-feature
         android:name="android.hardware.camera.flash"
@@ -27,17 +28,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FFEKommando">
         <activity
-            android:name=".ActivitySlave"
-            android:exported="false" />
-        <activity
-            android:name=".ActivityMaster"
-            android:exported="false" />
-        <activity
-            android:name=".ActivityCamera"
-            android:exported="false"
-            android:screenOrientation="landscape"
-            android:theme="@style/Theme.FFEKommando.Fullscreen" />
-        <activity
             android:name=".ActivityMain"
             android:exported="true"
             android:screenOrientation="portrait">
@@ -47,6 +37,21 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ActivitySlave"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.FFEKommando.SemiFullscreen"
+            android:exported="false" />
+        <activity
+            android:name=".ActivityMaster"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.FFEKommando.SemiFullscreen"
+            android:exported="false" />
+        <activity
+            android:name=".ActivityCamera"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.FFEKommando.Fullscreen" />
     </application>
 
 </manifest>

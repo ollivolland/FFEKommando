@@ -8,10 +8,12 @@
     tools:context=".ActivitySlave">
 
     <TextView   android:id="@+id/slave_tText"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="waiting for command..."
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="100dp"
+        android:layout_marginEnd="100dp"
         />
 
 </RelativeLayout>

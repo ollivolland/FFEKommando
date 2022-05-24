@@ -1,11 +1,13 @@
 package com.ollivolland.ffekommando
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.PowerManager
 
 
 
 
+@SuppressLint("InvalidWakeLockTag")
 class WakeLock(context: Context) {
 
     val mWakeLock: PowerManager.WakeLock

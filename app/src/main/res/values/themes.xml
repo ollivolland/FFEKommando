@@ -19,4 +19,8 @@
         <item name="windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
     </style>
+
+    <style name="Theme.FFEKommando.SemiFullscreen" parent="Theme.FFEKommando">
+        <item name="windowNoTitle">true</item>
+    </style>
 </resources>

@@ -12,7 +12,7 @@
     <RelativeLayout android:id="@+id/main_lButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="200dp"
+        android:layout_marginTop="50dp"
         android:gravity="center_horizontal|top"
         >
 
@@ -37,18 +37,70 @@
 
     </RelativeLayout>
 
-    <Spinner    android:id="@+id/spinner1"
-        android:visibility="gone"
-        android:layout_width="200dp"
+    <LinearLayout android:id="@+id/main_lSwitches"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/main_lButtons"
-        android:layout_marginTop="50dp"
+        android:layout_centerHorizontal="true"
+        android:orientation="vertical"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="200dp"
+        android:gravity="end"
+        android:layoutDirection="rtl"
+        >
+
+        <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/main_sCamera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kamera"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:checked="true"
+            app:switchPadding="20dp"
+            />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/main_sCommand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kommando"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:checked="false"
+            app:switchPadding="20dp"
+            />
+
+    </LinearLayout>
+
+    <Spinner    android:id="@+id/spinnerCommand"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/main_lSwitches"
+        android:layout_marginTop="10dp"
         android:layout_centerHorizontal="true"
         android:spinnerMode="dialog"
         />
 
+    <Spinner    android:id="@+id/spinnerDuration"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/spinnerCommand"
+        android:layout_marginTop="10dp"
+        android:layout_centerHorizontal="true"
+        android:spinnerMode="dialog"
+        />
+
+<!--    <Spinner    android:id="@+id/spinner1"-->
+<!--        android:visibility="gone"-->
+<!--        android:layout_width="200dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_below="@id/main_lButtons"-->
+<!--        android:layout_marginTop="50dp"-->
+<!--        android:layout_centerHorizontal="true"-->
+<!--        android:spinnerMode="dialog"-->
+<!--        />-->
+
     <TextView   android:id="@+id/main_tDescription"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"

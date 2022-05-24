@@ -13,6 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginEnd="200dp"
+        android:visibility="gone"
         />
 
     <ImageButton    android:id="@+id/start_bStop"
@@ -24,17 +25,17 @@
         android:src="@drawable/ic_outline_stop_32"
         android:scaleType="fitCenter"
         android:background="@color/transparent"
-        android:visibility="invisible"
+        android:visibility="gone"
         />
 
     <TextView   android:id="@+id/camera_tText"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
         android:layout_marginEnd="50dp"
         android:layout_marginTop="50dp"
-        android:text="camera"
+        android:layout_marginStart="50dp"
         />
 
 </RelativeLayout>
