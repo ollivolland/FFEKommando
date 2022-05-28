@@ -77,8 +77,10 @@ class ActivityCamera : AppCompatActivity() {
                 Log.i("CAMERA","camera thread interrupted $e1")
                 try {
                     thread {    //  because the interruption cancels i/o processes
-                        recorder.stop()
-                        recorder.release()
+                        try {
+                            recorder.stop()
+                            recorder.release()
+                        } catch (e:Exception) { Log.e("CAMERA", "exception on recorder termination, $e\n${e.stackTraceToString()}") }
 
                         val mediaMeta: MetadataEditor = MetadataEditor.createFrom(File(path))
                         val meta: MutableMap<String, MetaValue> = mediaMeta.keyedMeta

@@ -33,26 +33,24 @@ class ActivityMain: AppCompatActivity()
     private val locationListener = object : LocationListener {
         @SuppressLint("SimpleDateFormat")
         override fun onLocationChanged(location: Location) {
-                val time = SimpleDateFormat("dd/MM/yyyy HH:mm:ss.SSS").format(location.time)
+            val time = SimpleDateFormat("dd/MM/yyyy HH:mm:ss.SSS").format(location.time)
+            val millisSinceReceived = (android.os.SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1_000_000L
+            val thisDelay = (location.time + millisSinceReceived) - System.currentTimeMillis()
 
-                val nanosNow = android.os.SystemClock.elapsedRealtimeNanos()
-                val nanosReceivedLocation = location.elapsedRealtimeNanos
-                val dMillis = (nanosNow - nanosReceivedLocation) / 1_000_000L
-                val thisDelay = (location.time + dMillis) - System.currentTimeMillis()
+            if (isFirstLocation) isFirstLocation = false
+            else delayList.add(thisDelay)
+            if (delayList.count() > 1000) delayList.removeAt(0)
 
-                if (isFirstLocation) isFirstLocation = false
-                else delayList.add(thisDelay)
-                if (delayList.count() > 1000) delayList.removeAt(0)
-
-                Log.v(
-                    "LOCATION",
-                    "Time GPS: $time, delay = $thisDelay (${location.provider}) => $delay" +
-                            ", stdev = ${delayList.stdev().format(2)}"
-                )
+            Log.v(
+                "LOCATION",
+                "Time GPS: $time, delay = $thisDelay (${location.provider}) => $delay" +
+                        ", stdev = ${delayList.stdev().format(2)}"
+            )
         }
 
         override fun onProviderEnabled(provider: String) {}
         override fun onProviderDisabled(provider: String) {}
+        @Deprecated("Deprecated in Java")
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
     }
 
