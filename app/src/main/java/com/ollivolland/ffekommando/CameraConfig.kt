@@ -6,6 +6,7 @@ class CameraConfig(
     var isCamera: Boolean,
     var isCommand: Boolean,
     var commandBuilder: String,
+    var millisDelay: Long,
     var millisVideoDuration: Long) {
 
     fun generateInstance(activity: Activity, correctedTimeStartCamera: Long) : CameraInstance
@@ -24,10 +25,10 @@ class CameraConfig(
 
     companion object {
         const val COMMAND_DELAY = 1_000L
-        const val DELAY_VIDEO = 3_000L
         val default = CameraConfig(isCamera = false,
             isCommand = false,
             commandBuilder = "feuerwehr",
+            millisDelay = 5_000L,
             millisVideoDuration = 10_000L)
     }
 }

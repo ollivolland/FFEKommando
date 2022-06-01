@@ -15,142 +15,95 @@ abstract class CommandWrapper(activity: Activity) {
 
         operator fun get(key:String, activity: Activity): CommandWrapper
         {
+            val random = Random(System.currentTimeMillis())
+
             when (key.split('&')[0]) {
-                "feuerwehr" -> return object : CommandWrapper(activity) {
-                    var mpStartbefehl: MediaPlayer? = null
-                    var mpWhiteNoise: MediaPlayer? = null
-                    var timeStart:Long = -1L
-
-                    override val time: Long = 19_000L
-                    override val name: String = "feuerwehr"
-
-                    override fun prepare() {
-                        mpStartbefehl = MediaPlayer.create(activity, R.raw.startbefehl)
-                        mpWhiteNoise = MediaPlayer.create(activity, R.raw.whitenoise)
-                    }
-
-                    override fun start() {
-                        timeStart = System.currentTimeMillis()
-                        mpWhiteNoise?.start()
-                        sleepUntil(timeStart + 1_000L)
-                        mpStartbefehl?.start()
-                    }
-
-                    override fun stopAndRelease() {
-                        mpStartbefehl?.stop()
-                        mpWhiteNoise?.stop()
-                        mpStartbefehl?.release()
-                        mpWhiteNoise?.release()
-                    }
+                "feuerwehr" -> {
+                    return createCommandWrapper(activity, "feuerwehr",
+                        arrayOf(R.raw.startbefehl),
+                        arrayOf(1000),
+                        executionDelay = 18_000L)
                 }
-                "leichtathletik10" -> return object : CommandWrapper(activity) {
-                    var mpReady: MediaPlayer? = null
-                    var mpSet: MediaPlayer? = null
-                    var mpGo: MediaPlayer? = null
-                    var mpWhiteNoise: MediaPlayer? = null
-                    val generatedTimeToSet:Long
-                    val generatedTimeToGo:Long
-                    var timeStart:Long = -1L
+                "feuerwehrstaffel" -> {
+                    val resources = arrayOf(
+                        R.raw.narakeet_meinkommandowirdlauten,
+                        R.raw.narakeet_aufdieplaetze,
+                        R.raw.narakeet_fertig,
+                        R.raw.narakeet_los,
+                        R.raw.narakeet_meinkommandogilt,
+                        R.raw.narakeet_aufdieplaetze,
+                        R.raw.narakeet_fertig,
+                        R.raw.narakeet_los
+                    )
 
-                    init {
-                        if(key.contains('&')) {
-                            generatedTimeToSet = key.split('&')[1].toLong()
-                            generatedTimeToGo = key.split('&')[2].toLong()
-                        } else {
-                            val random = Random(System.currentTimeMillis())
-                            generatedTimeToSet = random.nextLong(4_000L,6_000L)
-                            generatedTimeToGo = 1_000L + random.nextLong(2_000L,5_000L)
-                        }
-                    }
-
-                    override val time: Long = generatedTimeToSet + generatedTimeToGo
-                    override val name: String = "leichtathletik10&$generatedTimeToSet&$generatedTimeToGo"
-
-                    override fun prepare() {
-                        mpReady = MediaPlayer.create(activity, R.raw.aufdieplaetze)
-                        mpSet = MediaPlayer.create(activity, R.raw.fertig)
-                        mpGo = MediaPlayer.create(activity, R.raw.gunshot_5db)
-                        mpWhiteNoise = MediaPlayer.create(activity, R.raw.whitenoise)
-                    }
-
-                    override fun start() {
-                        timeStart = System.currentTimeMillis()
-                        mpReady?.start()
-                        sleepUntil(timeStart + generatedTimeToSet)
-                        mpSet?.start()
-                        mpWhiteNoise?.start()
-                        sleepUntil(timeStart + generatedTimeToSet + generatedTimeToGo)
-                        mpGo?.start()
-                    }
-
-                    override fun stopAndRelease() {
-                        mpReady?.stop()
-                        mpSet?.stop()
-                        mpGo?.stop()
-                        mpWhiteNoise?.stop()
-                        mpReady?.release()
-                        mpSet?.release()
-                        mpGo?.release()
-                        mpWhiteNoise?.release()
-                    }
+                    return if(key.contains('&'))  createCommandWrapper(activity, key, resources)
+                    else createCommandWrapper(activity, "feuerwehrstaffel", resources,
+                        arrayOf(1000, 3000, 2000, 1200, 3000, 3000, 2000, 1200))
                 }
-                "leichtathletik30" -> return object : CommandWrapper(activity) {
-                    var mpReady: MediaPlayer? = null
-                    var mpSet: MediaPlayer? = null
-                    var mpGo: MediaPlayer? = null
-                    var mpWhiteNoise: MediaPlayer? = null
-                    val generatedTimeToReady:Long
-                    val generatedTimeToSet:Long
-                    val generatedTimeToGo:Long
-                    var timeStart:Long = -1L
+                "leichtathletik10" -> {
+                    val resources = arrayOf(R.raw.aufdieplaetze,
+                        R.raw.fertig,
+                        R.raw.gunshot_5db)
 
-                    init {
-                        if(key.contains('&')) {
-                            generatedTimeToReady= key.split('&')[1].toLong()
-                            generatedTimeToSet = key.split('&')[2].toLong()
-                            generatedTimeToGo = key.split('&')[3].toLong()
-                        } else {
-                            val random = Random(System.currentTimeMillis())
-                            generatedTimeToReady = random.nextLong(20_000L,40_000L)
-                            generatedTimeToSet = random.nextLong(20_000L,40_000L)
-                            generatedTimeToGo = 1_000L + random.nextLong(2_000L,5_000L)
-                        }
-                    }
+                    return if(key.contains('&'))  createCommandWrapper(activity, key, resources)
+                    else createCommandWrapper(activity, "leichtathletik10", resources,
+                        arrayOf(0,
+                            random.nextLong(4_000L, 6_000L),
+                            1_000L + random.nextLong(2_000L,5_000L)))
+                }
+                "leichtathletik30" -> {
+                    val resources = arrayOf(R.raw.aufdieplaetze,
+                            R.raw.fertig,
+                            R.raw.gunshot_5db)
 
-                    override val time: Long = generatedTimeToReady + generatedTimeToSet + generatedTimeToGo
-                    override val name: String = "leichtathletik30&$generatedTimeToReady&$generatedTimeToSet&$generatedTimeToGo"
-
-                    override fun prepare() {
-                        mpReady = MediaPlayer.create(activity, R.raw.aufdieplaetze)
-                        mpSet = MediaPlayer.create(activity, R.raw.fertig)
-                        mpGo = MediaPlayer.create(activity, R.raw.gunshot_5db)
-                        mpWhiteNoise = MediaPlayer.create(activity, R.raw.whitenoise)
-                    }
-
-                    override fun start() {
-                        timeStart = System.currentTimeMillis()
-                        sleepUntil(timeStart + generatedTimeToReady)
-                        mpReady?.start()
-                        sleepUntil(timeStart + generatedTimeToReady + generatedTimeToSet)
-                        mpSet?.start()
-                        mpWhiteNoise?.start()
-                        sleepUntil(timeStart + generatedTimeToReady + generatedTimeToSet + generatedTimeToGo)
-                        mpGo?.start()
-                    }
-
-                    override fun stopAndRelease() {
-                        mpReady?.stop()
-                        mpSet?.stop()
-                        mpGo?.stop()
-                        mpWhiteNoise?.stop()
-                        mpReady?.release()
-                        mpSet?.release()
-                        mpGo?.release()
-                        mpWhiteNoise?.release()
-                    }
+                    return if(key.contains('&'))  createCommandWrapper(activity, key, resources)
+                    else createCommandWrapper(activity, "leichtathletik30", resources,
+                            arrayOf(random.nextLong(20_000L,40_000L),
+                                random.nextLong(20_000L,40_000L),
+                                1_000L + random.nextLong(2_000L,5_000L)))
                 }
                 else -> throw Exception("false build command")
             }
+        }
+
+        private fun createCommandWrapper(activity: Activity, name:String, resources:Array<Int>, delays: Array<Long>, executionDelay:Long = 0): CommandWrapper {
+            return object : CommandWrapper(activity) {
+                val mps: Array<MediaPlayer> = resources.map { x -> MediaPlayer.create(activity, x) }.toTypedArray()
+                val mpNoise = MediaPlayer.create(activity, R.raw.whitenoise)
+                var timeStart:Long = -1L
+
+                override val time: Long = delays.sum() + executionDelay
+                override val name: String = "$name&${delays.joinToString(separator = "&")}"
+
+                override fun prepare() { }
+
+                override fun start() {
+                    timeStart = System.currentTimeMillis()
+
+                    mpNoise.isLooping = true
+                    mpNoise.start()
+
+                    for (i in 0 until resources.count())
+                    {
+                        sleepUntil(timeStart + delays.take(i+1).sum())
+                        mps[i].start()
+                    }
+                }
+
+                override fun stopAndRelease() {
+                    mpNoise.isLooping = false
+
+                    for (mp in mps.plus(mpNoise)) {
+                        mp.stop()
+                        mp.release()
+                    }
+                }
+            }
+        }
+
+        private fun createCommandWrapper(activity: Activity, buildName:String, resources:Array<Int>): CommandWrapper {
+            val delays = buildName.split('&').drop(1).map { x -> x.toLong() }.toTypedArray()
+            return createCommandWrapper(activity, buildName.split('&')[0], resources, delays)
         }
     }
 }

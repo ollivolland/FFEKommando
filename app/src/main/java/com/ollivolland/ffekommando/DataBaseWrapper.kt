@@ -9,7 +9,7 @@ import com.google.firebase.database.*
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 
-class DataBaseWrapper(context: Context) {
+class DataBaseWrapper(val context: Context) {
 
     init {
         if (!isInitialized()) db = Firebase.database.reference
@@ -57,7 +57,7 @@ class DataBaseWrapper(context: Context) {
     }
 
     companion object {
-        lateinit var db:DatabaseReference
+        private lateinit var db:DatabaseReference
         fun isInitialized() = ::db.isInitialized
     }
 }

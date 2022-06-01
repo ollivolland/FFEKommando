@@ -2,6 +2,7 @@ package com.ollivolland.ffekommando
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -39,7 +40,7 @@ class ActivityMain: AppCompatActivity()
 
             if (isFirstLocation) isFirstLocation = false
             else delayList.add(thisDelay)
-            if (delayList.count() > 1000) delayList.removeAt(0)
+            if (delayList.count() > 120) delayList.removeAt(0)
 
             Log.v(
                 "LOCATION",
@@ -80,6 +81,7 @@ class ActivityMain: AppCompatActivity()
         sCommand = findViewById(R.id.main_sCommand)
         val vSpinnerCommand = findViewById<Spinner>(R.id.spinnerCommand)
         val vSpinnerDuration = findViewById<Spinner>(R.id.spinnerDuration)
+        val vSpinnerDelay = findViewById<Spinner>(R.id.spinnerDelay)
         val tText:TextView = findViewById(R.id.main_tDescription)
 
         bMaster.setOnClickListener { startMaster() }
@@ -91,14 +93,19 @@ class ActivityMain: AppCompatActivity()
 
         tText.append("version = $versionName")
 
-        val selectionCommandBuilder = arrayOf("feuerwehr", "leichtathletik10", "leichtathletik30")
-        configSpinner(vSpinnerCommand, arrayOf("feuerwehr", "leichtathletik10", "leichtathletik30")) { i ->
+        val selectionCommandBuilder = arrayOf("feuerwehr", "leichtathletik10", "leichtathletik30", "feuerwehrstaffel")
+        configSpinner(vSpinnerCommand, arrayOf("feuerwehr", "leichtathletik 10 sek", "leichtathletik 30 sek", "feuerwehrstaffel")) { i ->
             CameraConfig.default.commandBuilder = selectionCommandBuilder[i]
         }
 
         val selectionDuration = arrayOf(60_000L, 100_000L, 10_000L)
         configSpinner(vSpinnerDuration, arrayOf("60 sek", "100 sek", "10 sek")) { i ->
             CameraConfig.default.millisVideoDuration = selectionDuration[i]
+        }
+
+        val selectionDelay = arrayOf(5_000L, 60_000L, 300_000L)
+        configSpinner(vSpinnerDelay, arrayOf("d 5 sek", "d 60 sek", "d 300 sek")) { i ->
+            CameraConfig.default.millisDelay = selectionDelay[i]
         }
 
         db = DataBaseWrapper(this)

@@ -32,7 +32,7 @@ class ActivityMaster : AppCompatActivity() {
         db = DataBaseWrapper(this)
 
         bStart.setOnClickListener {
-            val timeStartCamera = ActivityMain.correctedTime + CameraConfig.DELAY_VIDEO
+            val timeStartCamera = ActivityMain.correctedTime + CameraConfig.default.millisDelay
             val withConfig = CameraConfig.default.generateInstance(this, timeStartCamera)
 
             db["masters/$id/sessions/$timeStartCamera"] = hashMapOf(
