@@ -15,6 +15,7 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.view.PreviewView
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import org.jcodec.containers.mp4.boxes.MetaValue
@@ -28,7 +29,7 @@ import kotlin.concurrent.thread
 class ActivityCamera : AppCompatActivity() {
     private lateinit var camera: CameraWrapper
     private lateinit var bStop: ImageButton
-    private lateinit var vCameraSurface:TextureView
+    private lateinit var vCameraSurface:PreviewView
     private var fileName = ""; var path = ""
     private lateinit var threadCamera:Thread
     private lateinit var threadCommand:Thread
@@ -41,7 +42,7 @@ class ActivityCamera : AppCompatActivity() {
 
         cameraInstance = nextInstance!!
         fileName = "VID_${Globals.formatToSeconds.format(Date(cameraInstance.correctedTimeStartCamera))}_${Globals.getDeviceId(this)}.mp4"
-        val dir = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).path}/Camera"
+        val dir = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).absolutePath}/Camera"
         if(!File(dir).exists()) File(dir).mkdirs()
         path = "$dir/$fileName"
 
@@ -57,10 +58,6 @@ class ActivityCamera : AppCompatActivity() {
         //  Camera
         threadCamera = Thread {
             try {
-                //  prepare
-//                camera.prepare(vCameraSurface, path, intent.extras!!.getInt(VIDEO_PROFILE))
-//                while (!camera.isCameraPrepared) Thread.sleep(10)
-
                 //wait & do
                 sleepUntilCorrected(cameraInstance.correctedTimeStartCamera)
                 camera.startRecord()
@@ -150,18 +147,6 @@ class ActivityCamera : AppCompatActivity() {
         threadCommand.interrupt()
 
         finish()
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        camera.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-
-        camera.onPause()
     }
 
     private fun tryWriteMetadata() {

@@ -103,8 +103,8 @@ class ActivityMain: AppCompatActivity()
             CameraConfig.default.millisVideoDuration = selectionDuration[i]
         }
 
-        val selectionDelay = arrayOf(5_000L, 60_000L, 300_000L)
-        configSpinner(vSpinnerDelay, arrayOf("d 5 sek", "d 60 sek", "d 300 sek")) { i ->
+        val selectionDelay = arrayOf(10_000L, 60_000L, 150_000L, 300_000L)
+        configSpinner(vSpinnerDelay, arrayOf("d 10 sek", "d 60 sek", "d 150 sek", "d 300 sek")) { i ->
             CameraConfig.default.millisDelay = selectionDelay[i]
         }
 
