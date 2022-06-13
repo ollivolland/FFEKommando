@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.PackageManager
-import android.util.Log
 import androidx.camera.core.*
 import androidx.camera.core.impl.CameraInternal
 import androidx.camera.core.impl.Observable
@@ -18,9 +17,7 @@ import androidx.lifecycle.LifecycleOwner
 import java.io.File
 
 
-class CameraWrapper(private val activity: Activity, private val vPreviewSurface:PreviewView, val path:String, val videoProfile:Int) {
-    private var log = MyLog("CAMERA2")
-    var timeStartedRecording:Long = -1
+class MyCameraX(private val activity: Activity, private val vPreviewSurface:PreviewView, val path:String, val videoProfile:Int) : MyCamera() {
     private lateinit var videoCapture: VideoCapture
 
     private val cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
@@ -28,6 +25,7 @@ class CameraWrapper(private val activity: Activity, private val vPreviewSurface:
     private val qualitySelector = QualitySelector.from(Quality.FHD)
     private val executor = ContextCompat.getMainExecutor(activity)
     private var isHasCaptured = false
+    private var isVideoSaved = false
 
     init {
         log += "init"
@@ -35,34 +33,12 @@ class CameraWrapper(private val activity: Activity, private val vPreviewSurface:
         cameraProviderFuture.addListener({
             cameraProvider = cameraProviderFuture.get()
 
-             start()
+             create()
         }, executor)
     }
 
-    @SuppressLint("RestrictedApi")  //  dunno why, tutorial told me to
-    private fun start() {
-        cameraProvider.unbindAll()
-
-        val cameraSelector = CameraSelector.Builder()
-            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-            .build()
-
-        //  Preview use case
-        val preview = Preview.Builder().build()
-
-        preview.setSurfaceProvider(vPreviewSurface.surfaceProvider)
-
-        //  Video Capture use case
-        videoCapture = VideoCapture.Builder()
-            .setBitRate(20_000_000)
-            .setVideoFrameRate(60)
-            .build()
-
-        cameraProvider.bindToLifecycle(activity as LifecycleOwner, cameraSelector, preview, videoCapture)
-    }
-
     @SuppressLint("RestrictedApi")
-    fun startRecord() {
+    override fun startRecord() {
 
         if(isHasCaptured) {
             log += "Duplicate startRecord()"
@@ -91,20 +67,46 @@ class CameraWrapper(private val activity: Activity, private val vPreviewSurface:
             executor,
             object : VideoCapture.OnVideoSavedCallback {
                 override fun onVideoSaved(outputFileResults: VideoCapture.OutputFileResults) {
+                    isVideoSaved = true
                     log += "video saved successfully at $path"
                 }
 
                 override fun onError(videoCaptureError: Int, message: String, cause: Throwable?) {
+                    isVideoSaved = true
                     log += "video save UNSUCCESSFUL"
                 }
             })
         log += "start void at ${ActivityMain.correctedTime}"
+
+        while (!isVideoSaved) Thread.sleep(10)
     }
 
     @SuppressLint("RestrictedApi")
-    fun stopRecord() {
+    override fun stopRecord() {
         videoCapture.stopRecording()
         cameraProviderFuture.cancel(true)
         activity.runOnUiThread { cameraProvider.unbindAll() }
+    }
+
+    @SuppressLint("RestrictedApi")  //  dunno why, tutorial told me to
+    private fun create() {
+        cameraProvider.unbindAll()
+
+        val cameraSelector = CameraSelector.Builder()
+            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+            .build()
+
+        //  Preview use case
+        val preview = Preview.Builder().build()
+
+        preview.setSurfaceProvider(vPreviewSurface.surfaceProvider)
+
+        //  Video Capture use case
+        videoCapture = VideoCapture.Builder()
+            .setBitRate(20_000_000)
+            .setVideoFrameRate(60)
+            .build()
+
+        cameraProvider.bindToLifecycle(activity as LifecycleOwner, cameraSelector, preview, videoCapture)
     }
 }

@@ -14,8 +14,8 @@ android {
         applicationId "com.ollivolland.ffekommando"
         minSdk 26
         targetSdk 32
-        versionCode 3
-        versionName "2022-06-06"
+        versionCode 4
+        versionName "2022-06-13"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

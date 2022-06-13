@@ -11,7 +11,7 @@ class CameraConfig(
 
     fun generateInstance(activity: Activity, correctedTimeStartCamera: Long) : CameraInstance
     {
-        val commandWrapper = CommandWrapper[commandBuilder, activity]
+        val commandWrapper = MyCommand[commandBuilder, activity]
         return CameraInstance(
             isCamera = isCamera,
             isCommand = isCommand,

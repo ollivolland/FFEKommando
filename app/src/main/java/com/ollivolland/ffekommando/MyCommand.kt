@@ -4,7 +4,7 @@ import android.app.Activity
 import android.media.MediaPlayer
 import kotlin.random.Random
 
-abstract class CommandWrapper(activity: Activity) {
+abstract class MyCommand(activity: Activity) {
     abstract val time:Long
     abstract val name:String
     abstract fun start()
@@ -13,14 +13,14 @@ abstract class CommandWrapper(activity: Activity) {
 
     companion object {
 
-        operator fun get(key:String, activity: Activity): CommandWrapper
+        operator fun get(key:String, activity: Activity): MyCommand
         {
             val random = Random(System.currentTimeMillis())
 
             when (key.split('&')[0]) {
                 "feuerwehr" -> {
                     return createCommandWrapper(activity, "feuerwehr",
-                        arrayOf(R.raw.startbefehl),
+                        arrayOf(R.raw.startbefehl_5db),
                         arrayOf(1000),
                         executionDelay = 18_000L)
                 }
@@ -66,8 +66,8 @@ abstract class CommandWrapper(activity: Activity) {
             }
         }
 
-        private fun createCommandWrapper(activity: Activity, name:String, resources:Array<Int>, delays: Array<Long>, executionDelay:Long = 0): CommandWrapper {
-            return object : CommandWrapper(activity) {
+        private fun createCommandWrapper(activity: Activity, name:String, resources:Array<Int>, delays: Array<Long>, executionDelay:Long = 0): MyCommand {
+            return object : MyCommand(activity) {
                 val mps: Array<MediaPlayer> = resources.map { x -> MediaPlayer.create(activity, x) }.toTypedArray()
                 val mpNoise = MediaPlayer.create(activity, R.raw.whitenoise)
                 var timeStart:Long = -1L
@@ -101,7 +101,7 @@ abstract class CommandWrapper(activity: Activity) {
             }
         }
 
-        private fun createCommandWrapper(activity: Activity, buildName:String, resources:Array<Int>): CommandWrapper {
+        private fun createCommandWrapper(activity: Activity, buildName:String, resources:Array<Int>): MyCommand {
             val delays = buildName.split('&').drop(1).map { x -> x.toLong() }.toTypedArray()
             return createCommandWrapper(activity, buildName.split('&')[0], resources, delays)
         }

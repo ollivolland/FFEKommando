@@ -2,7 +2,6 @@ package com.ollivolland.ffekommando
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -17,7 +16,6 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.switchmaterial.SwitchMaterial
-import java.lang.Exception
 import java.text.SimpleDateFormat
 
 
@@ -29,7 +27,7 @@ class ActivityMain: AppCompatActivity()
     lateinit var bSlave:Button
     lateinit var sCamera:SwitchMaterial
     lateinit var sCommand:SwitchMaterial
-    lateinit var db: DataBaseWrapper
+    lateinit var db: MyDB
     lateinit var locationManager:LocationManager
     private val locationListener = object : LocationListener {
         @SuppressLint("SimpleDateFormat")
@@ -103,12 +101,12 @@ class ActivityMain: AppCompatActivity()
             CameraConfig.default.millisVideoDuration = selectionDuration[i]
         }
 
-        val selectionDelay = arrayOf(10_000L, 60_000L, 150_000L, 300_000L)
-        configSpinner(vSpinnerDelay, arrayOf("d 10 sek", "d 60 sek", "d 150 sek", "d 300 sek")) { i ->
+        val selectionDelay = arrayOf(3_000L, 10_000L, 60_000L, 150_000L, 300_000L, 600_000L)
+        configSpinner(vSpinnerDelay, arrayOf("Δ+3 sek", "Δ+10 sek", "Δ+60 sek", "Δ+150 sek", "Δ+300 sek", "Δ+600 sek")) { i ->
             CameraConfig.default.millisDelay = selectionDelay[i]
         }
 
-        db = DataBaseWrapper(this)
+        db = MyDB(this)
         db["test/test1/testKey"] = "testValue"
 
         //  Version

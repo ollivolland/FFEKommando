@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.SurfaceView
-import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
@@ -27,9 +26,10 @@ import kotlin.concurrent.thread
 
 
 class ActivityCamera : AppCompatActivity() {
-    private lateinit var camera: CameraWrapper
+    private var camera: MyCamera? = null
     private lateinit var bStop: ImageButton
-    private lateinit var vCameraSurface:PreviewView
+//    private lateinit var vCameraSurface:PreviewView
+    private lateinit var vCameraSurface:SurfaceView
     private var fileName = ""; var path = ""
     private lateinit var threadCamera:Thread
     private lateinit var threadCommand:Thread
@@ -53,14 +53,15 @@ class ActivityCamera : AppCompatActivity() {
         bStop.isEnabled = false
         bStop.setOnClickListener { stop("click") }
 
-        camera = CameraWrapper(this, vCameraSurface, path, intent.extras!!.getInt(VIDEO_PROFILE))
-
         //  Camera
         threadCamera = Thread {
             try {
+                //  Init
+//                camera = MyCameraX(this, vCameraSurface, path, intent.extras!!.getInt(VIDEO_PROFILE))
+                camera = MyMediaRecorder(path, vCameraSurface, this)
                 //wait & do
                 sleepUntilCorrected(cameraInstance.correctedTimeStartCamera)
-                camera.startRecord()
+                camera!!.startRecord()
 
                 Thread.sleep(Long.MAX_VALUE)
             }
@@ -68,7 +69,8 @@ class ActivityCamera : AppCompatActivity() {
                 Log.i("CAMERA","camera thread interrupted $e1")
 
                 thread {    //  because the interruption cancels i/o processes
-                    camera.stopRecord()
+                    camera?.stopRecord()
+                    Thread.sleep(1000)
                     tryWriteMetadata()
                 }
             }
@@ -79,10 +81,10 @@ class ActivityCamera : AppCompatActivity() {
 
         //  Command
         threadCommand = Thread {
-            var commandWrapper:CommandWrapper? = null
+            var commandWrapper:MyCommand? = null
             try {
                 //  prepare
-                commandWrapper = CommandWrapper[cameraInstance.commandFullName, this]
+                commandWrapper = MyCommand[cameraInstance.commandFullName, this]
                 commandWrapper.prepare()
 
                 //  wait & do
@@ -155,11 +157,11 @@ class ActivityCamera : AppCompatActivity() {
             val meta: MutableMap<String, MetaValue> = mediaMeta.keyedMeta
 
             val timeToCommandSeconds =
-                (cameraInstance.correctedTimeCommandExecuted - camera.timeStartedRecording) / 1000.0
+                (cameraInstance.correctedTimeCommandExecuted - camera!!.timeStartedRecording) / 1000.0
             val json = JSONObject()
 
             json.put("dateVideoStart",
-                Globals.formatToMillis.format(Date(camera.timeStartedRecording)))
+                Globals.formatToMillis.format(Date(camera!!.timeStartedRecording)))
 
             json.put("dateCommand",
                 Globals.formatToMillis.format(cameraInstance.correctedTimeCommandExecuted))

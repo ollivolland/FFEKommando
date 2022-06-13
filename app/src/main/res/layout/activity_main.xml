@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,7 +7,17 @@
     android:layout_height="match_parent"
     android:keepScreenOn="true"
     tools:context=".ActivityMain"
+    android:background="@color/cardview_dark_background"
     >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_margin="10dp"
+        android:background="@color/cardview_light_background"
+        >
 
     <RelativeLayout android:id="@+id/main_lButtons"
         android:layout_width="match_parent"
@@ -38,13 +48,10 @@
     </RelativeLayout>
 
     <LinearLayout android:id="@+id/main_lSwitches"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/main_lButtons"
-        android:layout_centerHorizontal="true"
         android:orientation="vertical"
         android:layout_marginTop="10dp"
-        android:layout_marginStart="200dp"
         android:gravity="end"
         android:layoutDirection="rtl"
         >
@@ -74,46 +81,31 @@
     <Spinner    android:id="@+id/spinnerCommand"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/main_lSwitches"
-        android:layout_marginTop="10dp"
-        android:layout_centerHorizontal="true"
         android:spinnerMode="dialog"
+        android:tooltipText="Kommando"
         />
 
     <Spinner    android:id="@+id/spinnerDuration"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/spinnerCommand"
-        android:layout_marginTop="10dp"
-        android:layout_centerHorizontal="true"
         android:spinnerMode="dialog"
+        android:tooltipText="Dauer"
         />
 
     <Spinner    android:id="@+id/spinnerDelay"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_below="@id/spinnerDuration"
-        android:layout_marginTop="10dp"
-        android:layout_centerHorizontal="true"
         android:spinnerMode="dialog"
+        android:tooltipText="Delay"
         />
-
-<!--    <Spinner    android:id="@+id/spinner1"-->
-<!--        android:visibility="gone"-->
-<!--        android:layout_width="200dp"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_below="@id/main_lButtons"-->
-<!--        android:layout_marginTop="50dp"-->
-<!--        android:layout_centerHorizontal="true"-->
-<!--        android:spinnerMode="dialog"-->
-<!--        />-->
 
     <TextView   android:id="@+id/main_tDescription"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
+        android:layout_marginTop="100dp"
         android:layout_marginBottom="100dp"
         />
 
-</RelativeLayout>
+    </LinearLayout>
+
+</ScrollView>

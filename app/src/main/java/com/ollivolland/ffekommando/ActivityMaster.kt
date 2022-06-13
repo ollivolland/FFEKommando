@@ -3,19 +3,13 @@ package com.ollivolland.ffekommando
 import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
-import com.google.firebase.database.*
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
-import java.util.*
-import kotlin.math.max
 
 class ActivityMaster : AppCompatActivity() {
     lateinit var id:String
     lateinit var wakeLock: WakeLock
-    lateinit var db: DataBaseWrapper
+    lateinit var db: MyDB
     var text:String = ""
 
     @SuppressLint("SetTextI18n")
@@ -29,7 +23,7 @@ class ActivityMaster : AppCompatActivity() {
         text = "id: $id"
 
         val bStart:Button = findViewById(R.id.master_bStart)
-        db = DataBaseWrapper(this)
+        db = MyDB(this)
 
         bStart.setOnClickListener {
             val timeStartCamera = ActivityMain.correctedTime + CameraConfig.default.millisDelay

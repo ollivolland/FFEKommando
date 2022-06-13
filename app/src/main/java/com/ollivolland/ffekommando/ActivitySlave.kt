@@ -3,7 +3,6 @@ package com.ollivolland.ffekommando
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.TextView
-import java.util.*
 
 class ActivitySlave : AppCompatActivity() {
 
@@ -20,7 +19,7 @@ class ActivitySlave : AppCompatActivity() {
         val tText:TextView = findViewById(R.id.slave_tText)
         text = "waiting for command\n\nmaster = $masterId";
 
-        val db = DataBaseWrapper(this)
+        val db = MyDB(this)
 
         db.listen("masters/$masterId/sessions") { dataSnapshot ->
             if(!dataSnapshot.hasChildren()) return@listen
