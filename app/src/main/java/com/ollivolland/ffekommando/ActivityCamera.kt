@@ -14,7 +14,6 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.view.PreviewView
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import org.jcodec.containers.mp4.boxes.MetaValue
@@ -34,12 +33,15 @@ class ActivityCamera : AppCompatActivity() {
     private lateinit var threadCamera:Thread
     private lateinit var threadCommand:Thread
     private lateinit var cameraInstance:CameraInstance
+    private lateinit var timerSynchronized: MyTimer
+    private var myCommandObserver:MyCommand? = null
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
 
+        timerSynchronized = ActivityCamera.timerSynchronized!!
         cameraInstance = nextInstance!!
         fileName = "VID_${Globals.formatToSeconds.format(Date(cameraInstance.correctedTimeStartCamera))}_${Globals.getDeviceId(this)}.mp4"
         val dir = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).absolutePath}/Camera"
@@ -58,9 +60,9 @@ class ActivityCamera : AppCompatActivity() {
             try {
                 //  Init
 //                camera = MyCameraX(this, vCameraSurface, path, intent.extras!!.getInt(VIDEO_PROFILE))
-                camera = MyMediaRecorder(path, vCameraSurface, this)
+                camera = MyCameraMediaRecorder(path, vCameraSurface, this, timerSynchronized)
                 //wait & do
-                sleepUntilCorrected(cameraInstance.correctedTimeStartCamera)
+                timerSynchronized.sleepUntil(cameraInstance.correctedTimeStartCamera)
                 camera!!.startRecord()
 
                 Thread.sleep(Long.MAX_VALUE)
@@ -85,10 +87,11 @@ class ActivityCamera : AppCompatActivity() {
             try {
                 //  prepare
                 commandWrapper = MyCommand[cameraInstance.commandFullName, this]
+                myCommandObserver = commandWrapper
                 commandWrapper.prepare()
 
                 //  wait & do
-                sleepUntilCorrected(cameraInstance.correctedTimeStartCamera + CameraConfig.COMMAND_DELAY)
+                timerSynchronized.sleepUntil(cameraInstance.correctedTimeStartCamera)
                 commandWrapper.start()
 
                 Thread.sleep(Long.MAX_VALUE)
@@ -104,7 +107,7 @@ class ActivityCamera : AppCompatActivity() {
         thread {
             while (!this.isDestroyed) {
                 runOnUiThread {
-                    tText.text = "time to start = ${(cameraInstance.correctedTimeStartCamera - ActivityMain.correctedTime) / 1000.0} s"
+                    tText.text = "time to start = ${(cameraInstance.correctedTimeStartCamera - timerSynchronized.time) / 1000.0} s"
                 }
 
                 Thread.sleep(100)
@@ -120,7 +123,7 @@ class ActivityCamera : AppCompatActivity() {
 
         //  stopper thread
         thread {
-            sleepUntilCorrected(cameraInstance.correctedTimeCommandExecuted + cameraInstance.millisVideoLength)
+            timerSynchronized.sleepUntil(cameraInstance.correctedTimeCommandExecuted + cameraInstance.millisVideoLength)
             stop("stopper thread")
         }
 
@@ -157,14 +160,26 @@ class ActivityCamera : AppCompatActivity() {
             val meta: MutableMap<String, MetaValue> = mediaMeta.keyedMeta
 
             val timeToCommandSeconds =
-                (cameraInstance.correctedTimeCommandExecuted - camera!!.timeStartedRecording) / 1000.0
+                (cameraInstance.correctedTimeCommandExecuted - camera!!.timeSynchronizedStartedRecording) * 0.001
             val json = JSONObject()
 
             json.put("dateVideoStart",
-                Globals.formatToMillis.format(Date(camera!!.timeStartedRecording)))
+                Globals.formatToMillis.format(Date(camera!!.timeSynchronizedStartedRecording)))
 
             json.put("dateCommand",
                 Globals.formatToMillis.format(cameraInstance.correctedTimeCommandExecuted))
+
+            if(myCommandObserver != null)
+            {
+                val lag = myCommandObserver!!.observedCommandLag
+                json.put("dateCommandWithLag",
+                    Globals.formatToMillis.format(cameraInstance.correctedTimeCommandExecuted + lag))
+                json.put("lagMs", lag)
+
+                meta["com.apple.quicktime.album"] =
+                    MetaValue.createString(
+                        "time to command with lag = ${(timeToCommandSeconds + lag * 0.001).format(3)} s")
+            }
 
             meta["com.apple.quicktime.title"] =
                 MetaValue.createString(json.toString(4)) //  system.title will not work
@@ -186,12 +201,14 @@ class ActivityCamera : AppCompatActivity() {
     }
 
     companion object {
-        const val VIDEO_PROFILE = "videoProfile"
+        private const val VIDEO_PROFILE = "videoProfile"
         var nextInstance:CameraInstance? = null
+        var timerSynchronized:MyTimer? = null
 
-        fun startCamera(activity:Activity, config: CameraInstance)
+        fun startCamera(activity:Activity, config: CameraInstance, timerSynchronized: MyTimer)
         {
             nextInstance = config
+            this.timerSynchronized = timerSynchronized
 
             activity.startActivity(Intent(activity, ActivityCamera::class.java).apply {
                 putExtra(VIDEO_PROFILE, CamcorderProfile.QUALITY_1080P)

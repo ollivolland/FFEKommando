@@ -2,11 +2,14 @@ package com.ollivolland.ffekommando
 
 import android.app.Activity
 import android.media.MediaPlayer
+import android.util.Log
+import kotlin.concurrent.thread
 import kotlin.random.Random
 
 abstract class MyCommand(activity: Activity) {
     abstract val time:Long
     abstract val name:String
+    var observedCommandLag:Long = -1
     abstract fun start()
     abstract fun prepare()
     abstract fun stopAndRelease()
@@ -17,93 +20,125 @@ abstract class MyCommand(activity: Activity) {
         {
             val random = Random(System.currentTimeMillis())
 
+            MyCommandBuilder(activity, "test").apply {
+                this[R.raw.startbefehl_5db] = 0L
+                executionDelay = 19_000L
+            }.build()
+
             when (key.split('&')[0]) {
                 "feuerwehr" -> {
-                    return createCommandWrapper(activity, "feuerwehr",
-                        arrayOf(R.raw.startbefehl_5db),
-                        arrayOf(1000),
-                        executionDelay = 18_000L)
+                    return MyCommandBuilder(activity, key).apply {
+                        this[R.raw.startbefehl_5db] = 0L
+                        executionDelay = 19_000L
+                    }.build()
+                }
+                "feuerwehr_slowenisch" -> {
+                    return MyCommandBuilder(activity, key).apply {
+                        this[R.raw.startbefehl_slowenisch_5db] = 0L
+                        executionDelay = 9_000L
+                    }.build()
                 }
                 "feuerwehrstaffel" -> {
-                    val resources = arrayOf(
-                        R.raw.narakeet_meinkommandowirdlauten,
-                        R.raw.narakeet_aufdieplaetze,
-                        R.raw.narakeet_fertig,
-                        R.raw.narakeet_los,
-                        R.raw.narakeet_meinkommandogilt,
-                        R.raw.narakeet_aufdieplaetze,
-                        R.raw.narakeet_fertig,
-                        R.raw.narakeet_los
-                    )
-
-                    return if(key.contains('&'))  createCommandWrapper(activity, key, resources)
-                    else createCommandWrapper(activity, "feuerwehrstaffel", resources,
-                        arrayOf(1000, 3000, 2000, 1200, 3000, 3000, 2000, 1200))
+                    return MyCommandBuilder(activity, key).apply {
+                        this[R.raw.startbefehl_slowenisch_5db] = 0L
+                        executionDelay = 13_000L
+                    }.build()
                 }
                 "leichtathletik10" -> {
-                    val resources = arrayOf(R.raw.aufdieplaetze,
-                        R.raw.fertig,
-                        R.raw.gunshot_5db)
+                    val delayToReady = random.nextLong(4_000L, 6_000L)
+                    val delayToShot = random.nextLong(2_000L,4_000L)
 
-                    return if(key.contains('&'))  createCommandWrapper(activity, key, resources)
-                    else createCommandWrapper(activity, "leichtathletik10", resources,
-                        arrayOf(0,
-                            random.nextLong(4_000L, 6_000L),
-                            1_000L + random.nextLong(2_000L,5_000L)))
+                    return MyCommandBuilder(activity, key).apply {
+                        this[R.raw.aufdieplaetze] = 0L
+                        this[R.raw.fertig] = delayToReady
+                        this[R.raw.gunshot_5db] = delayToReady + delayToShot
+                        executionDelay = delayToReady + delayToShot + 1_000L
+                    }.build()
                 }
                 "leichtathletik30" -> {
-                    val resources = arrayOf(R.raw.aufdieplaetze,
-                            R.raw.fertig,
-                            R.raw.gunshot_5db)
+                    val delayToReady = random.nextLong(15_000L, 40_000L)
+                    val delayToShot = random.nextLong(2_000L,4_000L)
 
-                    return if(key.contains('&'))  createCommandWrapper(activity, key, resources)
-                    else createCommandWrapper(activity, "leichtathletik30", resources,
-                            arrayOf(random.nextLong(20_000L,40_000L),
-                                random.nextLong(20_000L,40_000L),
-                                1_000L + random.nextLong(2_000L,5_000L)))
+                    return MyCommandBuilder(activity, key).apply {
+                        this[R.raw.aufdieplaetze] = 0L
+                        this[R.raw.fertig] = delayToReady
+                        this[R.raw.gunshot_5db] = delayToReady + delayToShot
+                        executionDelay = delayToReady + delayToShot + 1_000L
+                    }.build()
                 }
                 else -> throw Exception("false build command")
             }
         }
+    }
 
-        private fun createCommandWrapper(activity: Activity, name:String, resources:Array<Int>, delays: Array<Long>, executionDelay:Long = 0): MyCommand {
+    class MyCommandBuilder(private val activity: Activity, private val buildName: String) {
+
+        var executionDelay:Long = 0
+        private val listRawIds = mutableListOf<Int>()
+        private var listDelayFromStart = mutableListOf<Long>()
+
+        operator fun set(rawId:Int, delayFromStart:Long) {
+            listRawIds.add(rawId)
+            listDelayFromStart.add(delayFromStart)
+        }
+
+        fun build():MyCommand {
+            if(buildName.contains("&")) {
+                listDelayFromStart = buildName.split('&').drop(1).map { x -> x.toLong() }.toMutableList()
+            }
+
             return object : MyCommand(activity) {
-                val mps: Array<MediaPlayer> = resources.map { x -> MediaPlayer.create(activity, x) }.toTypedArray()
+                val mps: Array<MediaPlayer> = listRawIds.map { x -> MediaPlayer.create(activity, x) }.toTypedArray()
                 val mpNoise = MediaPlayer.create(activity, R.raw.whitenoise)
                 var timeStart:Long = -1L
 
-                override val time: Long = delays.sum() + executionDelay
-                override val name: String = "$name&${delays.joinToString(separator = "&")}"
+                override val time: Long = executionDelay
+                override val name: String = "$buildName&${listDelayFromStart.joinToString(separator = "&")}"
 
-                override fun prepare() { }
+                override fun prepare() {
+                    mpNoise.isLooping = true
+                }
 
-                override fun start() {
+                override fun start() {  //  IN SYSTEM TIME  bc. of standard deviation in gpstime
                     timeStart = System.currentTimeMillis()
 
-                    mpNoise.isLooping = true
-                    mpNoise.start()
+                    thread { mpNoise.start() }
 
-                    for (i in 0 until resources.count())
-                    {
-                        sleepUntil(timeStart + delays.take(i+1).sum())
-                        mps[i].start()
-                    }
+                    for (i in 0 until mps.count())
+                        thread {
+                            try {
+                                val startAt = timeStart + listDelayFromStart[i]
+                                sleepUntil(startAt)
+                                mps[i].start()
+                                Log.i("COMMAND", "MediaPlayer[$i] started")
+
+                                mps[i].setOnSeekCompleteListener { Log.i("COMMAND", "MediaPlayer[$i] seek complete") }
+
+                                sleepUntil { mps[i].currentPosition >= 10 }
+                                Log.i("COMMAND", "MediaPlayer[$i] pos positive, current lag = ${System.currentTimeMillis() - startAt - mps[i].currentPosition}")
+                                mps[i].seekTo((System.currentTimeMillis() - startAt).toInt())
+
+                                //  observe lag
+                                if(i == mps.count() - 1)  {
+                                    val delay = System.currentTimeMillis() - startAt - mps[i].currentPosition
+                                    observedCommandLag = delay
+                                    Log.i("COMMAND", "MediaPlayer[$i] lag = $delay ms")
+                                }
+
+                                //  release
+                                sleepUntil { !mps[i].isPlaying }
+                                mps[i].release()
+                                Log.i("COMMAND", "MediaPlayer[$i] released bc. unused")
+                            } catch (e:Exception) { }
+                        }
                 }
 
                 override fun stopAndRelease() {
                     mpNoise.isLooping = false
 
-                    for (mp in mps.plus(mpNoise)) {
-                        mp.stop()
-                        mp.release()
-                    }
+                    for (mp in mps.plus(mpNoise)) mp.release()
                 }
             }
-        }
-
-        private fun createCommandWrapper(activity: Activity, buildName:String, resources:Array<Int>): MyCommand {
-            val delays = buildName.split('&').drop(1).map { x -> x.toLong() }.toTypedArray()
-            return createCommandWrapper(activity, buildName.split('&')[0], resources, delays)
         }
     }
 }

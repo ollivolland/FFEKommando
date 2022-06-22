@@ -14,8 +14,8 @@ android {
         applicationId "com.ollivolland.ffekommando"
         minSdk 26
         targetSdk 32
-        versionCode 4
-        versionName "2022-06-13"
+        versionCode 5
+        versionName "2022-06-22E"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -44,6 +44,7 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'com.google.android.material:material:1.6.1'
+    implementation 'com.google.android.exoplayer:exoplayer:2.18.0'
 
 // CameraX
     def camerax_version = "1.2.0-alpha02"

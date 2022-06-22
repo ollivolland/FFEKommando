@@ -26,23 +26,23 @@ class ActivityMaster : AppCompatActivity() {
         db = MyDB(this)
 
         bStart.setOnClickListener {
-            val timeStartCamera = ActivityMain.correctedTime + CameraConfig.default.millisDelay
+            val timerSynchronized = ActivityMain.timerSynchronized
+            val timeStartCamera = timerSynchronized.time + CameraConfig.default.millisDelay
             val withConfig = CameraConfig.default.generateInstance(this, timeStartCamera)
 
             db["masters/$id/sessions/$timeStartCamera"] = hashMapOf(
                 "correctedTimeCameraStart" to withConfig.correctedTimeStartCamera,
-                "correctedTimeCommandStart" to withConfig.correctedTimeCommandStart,
                 "correctedTimeCommandExecuted" to withConfig.correctedTimeCommandExecuted,
                 "millisVideoLength" to withConfig.millisVideoLength,
                 "command" to withConfig.commandFullName
             )
 
             Thread {
-                sleepUntilCorrected(withConfig.correctedTimeCommandExecuted + withConfig.millisVideoLength + 10_000L)
+                timerSynchronized.sleepUntil(withConfig.correctedTimeCommandExecuted + withConfig.millisVideoLength + 10_000L)
                 db - "/masters/$id/sessions/$timeStartCamera"
             }.start()
 
-            ActivityCamera.startCamera(this, withConfig)
+            ActivityCamera.startCamera(this, withConfig, timerSynchronized)
         }
 
         wakeLock = WakeLock(this)

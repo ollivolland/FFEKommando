@@ -24,6 +24,7 @@ class ActivitySlave : AppCompatActivity() {
         db.listen("masters/$masterId/sessions") { dataSnapshot ->
             if(!dataSnapshot.hasChildren()) return@listen
 
+            val timerSynchronized = ActivityMain.timerSynchronized
             val child = dataSnapshot.children.maxByOrNull { x -> x.key!! }!!
             val timeStartCamera = child.child("correctedTimeCameraStart").value as Long
             val command = child.child("command").value as String
@@ -33,13 +34,12 @@ class ActivitySlave : AppCompatActivity() {
                 isCommand = CameraConfig.default.isCommand,
                 commandFullName = command,
                 correctedTimeStartCamera = timeStartCamera,
-                correctedTimeCommandStart = child.child("correctedTimeCommandStart").value as Long,
                 correctedTimeCommandExecuted = child.child("correctedTimeCommandExecuted").value as Long,
                 millisVideoLength = child.child("millisVideoLength").value as Long,
             )
 
-            if(timeStartCamera > ActivityMain.correctedTime && timeStartCamera != lastStart) {
-                ActivityCamera.startCamera(this@ActivitySlave, withConfig)
+            if(timeStartCamera > timerSynchronized.time && timeStartCamera != lastStart) {
+                ActivityCamera.startCamera(this@ActivitySlave, withConfig, timerSynchronized)
 
                 lastStart = timeStartCamera
             }

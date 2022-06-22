@@ -17,7 +17,7 @@ import androidx.lifecycle.LifecycleOwner
 import java.io.File
 
 
-class MyCameraX(private val activity: Activity, private val vPreviewSurface:PreviewView, val path:String, val videoProfile:Int) : MyCamera() {
+class MyCameraCameraX(private val activity: Activity, private val vPreviewSurface:PreviewView, val path:String, val videoProfile:Int, private val timerSynchronized: MyTimer) : MyCamera() {
     private lateinit var videoCapture: VideoCapture
 
     private val cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
@@ -54,10 +54,10 @@ class MyCameraX(private val activity: Activity, private val vPreviewSurface:Prev
         isHasCaptured = true
         val observer = object : Observable.Observer<CameraInternal.State> {
             override fun onNewData(value: CameraInternal.State?) {
-                log += "state has changed, new value: $value at ${ActivityMain.correctedTime}"
+                log += "state has changed, new value: $value at ${timerSynchronized.time}"
 
-                if(value == CameraInternal.State.OPEN) timeStartedRecording = ActivityMain.correctedTime
-                if(value == CameraInternal.State.CLOSING) log += "video exact duration = ${ActivityMain.correctedTime - timeStartedRecording}"
+                if(value == CameraInternal.State.OPEN) timeSynchronizedStartedRecording = timerSynchronized.time
+                if(value == CameraInternal.State.CLOSING) log += "video exact duration = ${timerSynchronized.time - timeSynchronizedStartedRecording}"
             }
 
             override fun onError(t: Throwable) { }
@@ -76,7 +76,7 @@ class MyCameraX(private val activity: Activity, private val vPreviewSurface:Prev
                     log += "video save UNSUCCESSFUL"
                 }
             })
-        log += "start void at ${ActivityMain.correctedTime}"
+        log += "start void at ${timerSynchronized.time}"
 
         while (!isVideoSaved) Thread.sleep(10)
     }

@@ -91,8 +91,8 @@ class ActivityMain: AppCompatActivity()
 
         tText.append("version = $versionName")
 
-        val selectionCommandBuilder = arrayOf("feuerwehr", "leichtathletik10", "leichtathletik30", "feuerwehrstaffel")
-        configSpinner(vSpinnerCommand, arrayOf("feuerwehr", "leichtathletik 10 sek", "leichtathletik 30 sek", "feuerwehrstaffel")) { i ->
+        val selectionCommandBuilder = arrayOf("feuerwehr", "feuerwehr_slowenisch", "leichtathletik10", "leichtathletik30", "feuerwehrstaffel")
+        configSpinner(vSpinnerCommand, arrayOf("feuerwehr", "feuerwehr slowenisch", "leichtathletik 10 sek", "leichtathletik 30 sek", "feuerwehrstaffel")) { i ->
             CameraConfig.default.commandBuilder = selectionCommandBuilder[i]
         }
 
@@ -145,6 +145,8 @@ class ActivityMain: AppCompatActivity()
 
     private fun startMaster()
     {
+        val timerSynchronized = ActivityMain.timerSynchronized
+
         db["masters/$androidIdd",
             { task ->
                 if(task.isSuccessful) startActivity(Intent(this, ActivityMaster::class.java).putExtra("ID", androidIdd))
@@ -152,7 +154,7 @@ class ActivityMain: AppCompatActivity()
             }
         ] = hashMapOf(
             "isActive" to true,
-            "activeSince" to correctedTime
+            "activeSince" to timerSynchronized.time
         )
     }
 
@@ -219,6 +221,6 @@ class ActivityMain: AppCompatActivity()
     companion object {
         val delayList:MutableList<Long> = mutableListOf()
         val delay:Long get() = if(delayList.isEmpty()) 0 else delayList.mean().toLong()
-        val correctedTime:Long get() = System.currentTimeMillis() + delay
+        val timerSynchronized:MyTimer get() = MyTimer(delay)
     }
 }

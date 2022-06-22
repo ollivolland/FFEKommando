@@ -5,9 +5,8 @@ import android.media.CamcorderProfile
 import android.media.MediaRecorder
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import android.view.TextureView
 
-class MyMediaRecorder(private val path:String, private val surfaceView: SurfaceView, private val activity: Activity):MyCamera() {
+class MyCameraMediaRecorder(private val path:String, private val surfaceView: SurfaceView, private val activity: Activity, private val timerSynchronized: MyTimer):MyCamera() {
     private val mediaRecorder = MediaRecorder()
     private var isHolderCreated = false
     private var isRecorderPrepared = false
@@ -30,7 +29,7 @@ class MyMediaRecorder(private val path:String, private val surfaceView: SurfaceV
 
         try {
             mediaRecorder.start()
-            timeStartedRecording = ActivityMain.correctedTime
+            timeSynchronizedStartedRecording = timerSynchronized.time
             log += "started"
         } catch (e: Exception) {
             e.printStackTrace()
