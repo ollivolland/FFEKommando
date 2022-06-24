@@ -75,6 +75,7 @@ class ActivityMain: AppCompatActivity()
 
         bMaster = findViewById(R.id.main_bMaster)
         bSlave = findViewById(R.id.main_bSlave)
+        val bAnalyze:Button = findViewById(R.id.main_bAnalyze)
         sCamera = findViewById(R.id.main_sCamera)
         sCommand = findViewById(R.id.main_sCommand)
         val vSpinnerCommand = findViewById<Spinner>(R.id.spinnerCommand)
@@ -84,6 +85,7 @@ class ActivityMain: AppCompatActivity()
 
         bMaster.setOnClickListener { startMaster() }
         bSlave.setOnClickListener { startSlave() }
+        bAnalyze.setOnClickListener { startActivity(Intent(this, ActivityAnalyze::class.java)) }
         CameraConfig.default.isCamera = sCamera.isChecked
         sCamera.setOnClickListener { CameraConfig.default.isCamera = sCamera.isChecked }
         CameraConfig.default.isCommand = sCommand.isChecked

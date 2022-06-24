@@ -12,13 +12,6 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-<!--    <uses-feature android:name="android.hardware.camera.flash"-->
-<!--        android:required="true" />-->
-<!--    <uses-feature android:name="android.hardware.location.gps"-->
-<!--        android:required="true" />-->
-<!--    <uses-feature android:name="android.hardware.camera"-->
-<!--        android:required="true" />-->
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -26,6 +19,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FFEKommando">
+        <activity
+            android:name=".ActivityAnalyze"
+            android:exported="false" />
         <activity
             android:name=".ActivityMain"
             android:exported="true"
@@ -38,14 +34,14 @@
         </activity>
         <activity
             android:name=".ActivitySlave"
+            android:exported="false"
             android:screenOrientation="landscape"
-            android:theme="@style/Theme.FFEKommando.SemiFullscreen"
-            android:exported="false" />
+            android:theme="@style/Theme.FFEKommando.SemiFullscreen" />
         <activity
             android:name=".ActivityMaster"
+            android:exported="false"
             android:screenOrientation="landscape"
-            android:theme="@style/Theme.FFEKommando.SemiFullscreen"
-            android:exported="false" />
+            android:theme="@style/Theme.FFEKommando.SemiFullscreen" />
         <activity
             android:name=".ActivityCamera"
             android:exported="false"

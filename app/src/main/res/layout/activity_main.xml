@@ -19,92 +19,98 @@
         android:background="@color/cardview_light_background"
         >
 
-    <RelativeLayout android:id="@+id/main_lButtons"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
-        android:gravity="center_horizontal|top"
-        >
-
-        <Button android:id="@+id/main_bMaster"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:text="Kamera Meister"
-            android:textSize="10sp"
-            android:src="@drawable/ic_launcher_foreground"
-            android:contentDescription="@string/main_bStartContentDescription"
+        <Button android:id="@+id/main_bAnalyze"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:text="analyze"
             />
 
-        <Button android:id="@+id/main_bSlave"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_marginStart="150dp"
-            android:textSize="10sp"
-            android:text="Kamera Sklave"
-            android:src="@drawable/ic_launcher_foreground"
-            android:contentDescription="@string/main_bCameraContentDescription"
-            />
+        <RelativeLayout android:id="@+id/main_lButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:gravity="center_horizontal|top"
+            >
 
-    </RelativeLayout>
+            <Button android:id="@+id/main_bMaster"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:text="Kamera Meister"
+                android:textSize="10sp"
+                android:src="@drawable/ic_launcher_foreground"
+                android:contentDescription="@string/main_bStartContentDescription"
+                />
 
-    <LinearLayout android:id="@+id/main_lSwitches"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="10dp"
-        android:gravity="end"
-        android:layoutDirection="rtl"
-        >
+            <Button android:id="@+id/main_bSlave"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginStart="150dp"
+                android:textSize="10sp"
+                android:text="Kamera Sklave"
+                android:src="@drawable/ic_launcher_foreground"
+                android:contentDescription="@string/main_bCameraContentDescription"
+                />
 
-        <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/main_sCamera"
+        </RelativeLayout>
+
+        <LinearLayout android:id="@+id/main_lSwitches"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Kamera"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:checked="true"
-            app:switchPadding="20dp"
-            />
+            android:orientation="vertical"
+            android:layout_marginTop="10dp"
+            android:gravity="end"
+            android:layoutDirection="rtl"
+            >
 
-        <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/main_sCommand"
-            android:layout_width="wrap_content"
+            <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/main_sCamera"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kamera"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:checked="true"
+                app:switchPadding="20dp"
+                />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/main_sCommand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kommando"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:checked="false"
+                app:switchPadding="20dp"
+                />
+
+        </LinearLayout>
+
+        <Spinner    android:id="@+id/spinnerCommand"
+            android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:text="Kommando"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:checked="false"
-            app:switchPadding="20dp"
+            android:spinnerMode="dialog"
+            android:tooltipText="Kommando"
             />
 
-    </LinearLayout>
+        <Spinner    android:id="@+id/spinnerDuration"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:spinnerMode="dialog"
+            android:tooltipText="Dauer"
+            />
 
-    <Spinner    android:id="@+id/spinnerCommand"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:spinnerMode="dialog"
-        android:tooltipText="Kommando"
-        />
+        <Spinner    android:id="@+id/spinnerDelay"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:spinnerMode="dialog"
+            android:tooltipText="Delay"
+            />
 
-    <Spinner    android:id="@+id/spinnerDuration"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:spinnerMode="dialog"
-        android:tooltipText="Dauer"
-        />
-
-    <Spinner    android:id="@+id/spinnerDelay"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:spinnerMode="dialog"
-        android:tooltipText="Delay"
-        />
-
-    <TextView   android:id="@+id/main_tDescription"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
-        android:layout_marginBottom="100dp"
-        />
+        <TextView   android:id="@+id/main_tDescription"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:layout_marginBottom="100dp"
+            />
 
     </LinearLayout>
 

@@ -45,24 +45,24 @@ abstract class MyCommand(activity: Activity) {
                     }.build()
                 }
                 "leichtathletik10" -> {
-                    val delayToReady = random.nextLong(4_000L, 6_000L)
-                    val delayToShot = random.nextLong(2_000L,4_000L)
+                    val delayToReady = random.nextLong(5_000L, 10_000L)
+                    val delayToShot = random.nextLong(3_000L,5_000L)
 
                     return MyCommandBuilder(activity, key).apply {
                         this[R.raw.aufdieplaetze] = 0L
                         this[R.raw.fertig] = delayToReady
-                        this[R.raw.gunshot_5db] = delayToReady + delayToShot
+                        this[R.raw.gunshot_10db_1s_delayed] = delayToReady + delayToShot
                         executionDelay = delayToReady + delayToShot + 1_000L
                     }.build()
                 }
                 "leichtathletik30" -> {
-                    val delayToReady = random.nextLong(15_000L, 40_000L)
-                    val delayToShot = random.nextLong(2_000L,4_000L)
+                    val delayToReady = random.nextLong(15_000L, 30_000L)
+                    val delayToShot = random.nextLong(3_000L,5_000L)
 
                     return MyCommandBuilder(activity, key).apply {
                         this[R.raw.aufdieplaetze] = 0L
                         this[R.raw.fertig] = delayToReady
-                        this[R.raw.gunshot_5db] = delayToReady + delayToShot
+                        this[R.raw.gunshot_10db_1s_delayed] = delayToReady + delayToShot
                         executionDelay = delayToReady + delayToShot + 1_000L
                     }.build()
                 }

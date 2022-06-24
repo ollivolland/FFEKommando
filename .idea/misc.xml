@@ -3,10 +3,12 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/ORV1/Documents/Workspaces/Androidstudio/FFEKommando/app/src/main/res/layout/activity_analyze.xml" value="0.17477203647416414" />
         <entry key="..\:/Users/ORV1/Documents/Workspaces/Androidstudio/FFEKommando/app/src/main/res/layout/activity_camera.xml" value="0.129981884057971" />
         <entry key="..\:/Users/ORV1/Documents/Workspaces/Androidstudio/FFEKommando/app/src/main/res/layout/activity_main.xml" value="0.14130434782608695" />
         <entry key="..\:/Users/ORV1/Documents/Workspaces/Androidstudio/FFEKommando/app/src/main/res/layout/activity_master.xml" value="0.14221014492753623" />
         <entry key="..\:/Users/ORV1/Documents/Workspaces/Androidstudio/FFEKommando/app/src/main/res/layout/activity_slave.xml" value="0.14221014492753623" />
+        <entry key="..\:/Users/ORV1/Documents/Workspaces/Androidstudio/FFEKommando/app/src/main/res/layout/view_image.xml" value="0.10960144927536232" />
         <entry key="..\:/Users/User/WorkSpaces/AndroidStudio/FFEKommando/app/src/main/res/layout/activity_camera.xml" value="0.1466565349544073" />
         <entry key="..\:/Users/User/WorkSpaces/AndroidStudio/FFEKommando/app/src/main/res/layout/activity_main.xml" value="0.21240942028985507" />
         <entry key="..\:/Users/User/WorkSpaces/AndroidStudio/FFEKommando/app/src/main/res/layout/activity_master.xml" value="0.10739614994934144" />
