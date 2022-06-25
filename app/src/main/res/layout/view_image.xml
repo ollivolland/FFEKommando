@@ -11,6 +11,11 @@
         android:layout_height="200dp"
         />
 
+    <ImageView  android:id="@+id/image_iImage2"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        />
+
     <TextView   android:id="@+id/image_tText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

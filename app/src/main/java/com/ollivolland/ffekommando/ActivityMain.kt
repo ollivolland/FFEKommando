@@ -98,8 +98,8 @@ class ActivityMain: AppCompatActivity()
             CameraConfig.default.commandBuilder = selectionCommandBuilder[i]
         }
 
-        val selectionDuration = arrayOf(60_000L, 100_000L, 10_000L)
-        configSpinner(vSpinnerDuration, arrayOf("60 sek", "100 sek", "10 sek")) { i ->
+        val selectionDuration = arrayOf(60_000L, 30_000L, 100_000L, 10_000L)
+        configSpinner(vSpinnerDuration, arrayOf("60 sek", "30 sek", "100 sek", "10 sek")) { i ->
             CameraConfig.default.millisVideoDuration = selectionDuration[i]
         }
 
