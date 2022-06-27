@@ -10,6 +10,7 @@ class Globals {
     companion object {
         val formatToSeconds = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ENGLISH)
         val formatToMillis = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.ENGLISH)
+        val formatToTimeOfDay = SimpleDateFormat("HH:mm:ss", Locale.ENGLISH)
 
         @SuppressLint("HardwareIds")
         fun getDeviceId(context: Context) : String {

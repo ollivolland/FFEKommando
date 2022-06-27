@@ -8,4 +8,6 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="transparent">#00000000</color>
+    <color name="background">#333333</color>
+    <color name="background_card">#FFFFFF</color>
 </resources>

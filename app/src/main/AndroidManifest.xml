@@ -33,12 +33,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ActivitySlave"
-            android:exported="false"
-            android:screenOrientation="landscape"
-            android:theme="@style/Theme.FFEKommando.SemiFullscreen" />
-        <activity
-            android:name=".ActivityMaster"
+            android:name=".ActivityController"
             android:exported="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.FFEKommando.SemiFullscreen" />

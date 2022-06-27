@@ -4,8 +4,10 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.media.CamcorderProfile
+import android.media.MediaMetadataRetriever
 import android.os.Bundle
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import android.view.SurfaceView
 import android.view.View
@@ -59,7 +61,7 @@ class ActivityCamera : AppCompatActivity() {
         threadCamera = Thread {
             try {
                 //  Init
-//                camera = MyCameraX(this, vCameraSurface, path, intent.extras!!.getInt(VIDEO_PROFILE))
+//                camera = MyCameraCameraX(this, vCameraSurface, path, intent.extras!!.getInt(VIDEO_PROFILE))
                 camera = MyCameraMediaRecorder(path, vCameraSurface, this, timerSynchronized)
                 //wait & do
                 timerSynchronized.sleepUntil(cameraInstance.correctedTimeStartCamera)

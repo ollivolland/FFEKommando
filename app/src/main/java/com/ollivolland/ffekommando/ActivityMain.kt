@@ -151,7 +151,7 @@ class ActivityMain: AppCompatActivity()
 
         db["masters/$androidIdd",
             { task ->
-                if(task.isSuccessful) startActivity(Intent(this, ActivityMaster::class.java).putExtra("ID", androidIdd))
+                if(task.isSuccessful) ActivityController.launchMaster(this, androidIdd)
                 else Toast.makeText(this, "failure", Toast.LENGTH_LONG).show()
             }
         ] = hashMapOf(
@@ -176,10 +176,7 @@ class ActivityMain: AppCompatActivity()
 
                 builder.setTitle("wähle den Meister (${it.result.childrenCount} vorhanden)")
                     .setItems(masters) { _, which ->
-                        startActivity(
-                            Intent(this, ActivitySlave::class.java)
-                                .putExtra("MASTER_ID", masters[which]))
-
+                        ActivityController.launchSlave(this, androidIdd, masters[which])
                         bSlave.isEnabled = true
                     }.setOnDismissListener {
                     bSlave.isEnabled = true

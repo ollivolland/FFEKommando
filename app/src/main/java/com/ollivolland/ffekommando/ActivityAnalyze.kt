@@ -97,7 +97,7 @@ class ActivityAnalyze : AppCompatActivity() {
                 val xOfLine = frameCurrent.width / 2
                 val thisLineBroken = percentBroken(frameCurrent, frameLast, xOfLine)
 
-                isPart = if(thisLineBroken > 0.1 && i != frameCount - 1) {
+                isPart = if(thisLineBroken > Companion.MIN_LINE_BROKEN_FOR_REGISTER && i != frameCount - 1) {
                     if(!isPart) listFrameIndex.add(i)
 
                     partBroken.add(thisLineBroken)
@@ -135,7 +135,7 @@ class ActivityAnalyze : AppCompatActivity() {
                         }
                         runOnUiThread { image2.setImageBitmap(static) }
                     }
-                    text.text = "acc time = ${"%.3f".format(timeOfFrame[frameIndexCrossedWithBody]!!)} s"
+                    text.text = "frame time = ${"%.3f".format(timeOfFrame[frameIndexCrossedWithBody]!!)} s"
 
                     vParent.addView(inflatedView)
                 }
@@ -155,7 +155,7 @@ class ActivityAnalyze : AppCompatActivity() {
             val x = index % width
             val y = index / width
 
-            outMap[x, y] = if(distanceEuclidean(thisBitmap[x, y], lastBitmap[x, y]) < 0.1) Color.BLACK else Color.RED
+            outMap[x, y] = if(isBroken(thisBitmap[x, y], lastBitmap[x, y])) Color.BLACK else Color.RED
         }
 
         val firstBody = xOfBroken(thisBitmap, lastBitmap)
@@ -195,13 +195,8 @@ class ActivityAnalyze : AppCompatActivity() {
     }
 
     private fun percentBroken(frameCurrent:Bitmap, frameLast:Bitmap, posX:Int):Double {
-        val thresholdSquared = 0.1.pow(2)
-
         return (0 until frameCurrent.height).count { y ->
-            distanceEuclideanSquared(
-                frameCurrent[posX, y],
-                frameLast[posX, y]
-            ) > thresholdSquared
+            isBroken(frameCurrent[posX, y], frameLast[posX, y])
         }.toDouble() / frameCurrent.height
     }
 
@@ -219,11 +214,15 @@ class ActivityAnalyze : AppCompatActivity() {
         return sqrt((deltaR * deltaR + deltaG * deltaG + deltaB * deltaB).toDouble() / 195075)
     }
 
-    private fun distanceEuclideanSquared(a: Int, b: Int): Double {
+    private fun isBroken(a: Int, b: Int): Boolean {
         val deltaR: Int = (a.red - b.red)
         val deltaG: Int = (a.green - b.green)
         val deltaB: Int = (a.blue - b.blue)
 
-        return (deltaR * deltaR + deltaG * deltaG + deltaB * deltaB).toDouble() / 195075
+        return (deltaR * deltaR + deltaG * deltaG + deltaB * deltaB) > 1952 //  195075 * 0.1^2
+    }
+
+    companion object {
+        const val MIN_LINE_BROKEN_FOR_REGISTER = 0.1
     }
 }
