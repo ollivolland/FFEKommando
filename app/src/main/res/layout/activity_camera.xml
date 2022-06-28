@@ -9,7 +9,7 @@
     android:keepScreenOn="true"
     >
 
-    <SurfaceView    android:id="@+id/start_sCameraView"
+    <androidx.camera.view.PreviewView    android:id="@+id/start_sCameraView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"

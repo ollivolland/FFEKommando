@@ -16,6 +16,7 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.view.PreviewView
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import org.jcodec.containers.mp4.boxes.MetaValue
@@ -29,8 +30,8 @@ import kotlin.concurrent.thread
 class ActivityCamera : AppCompatActivity() {
     private var camera: MyCamera? = null
     private lateinit var bStop: ImageButton
-//    private lateinit var vCameraSurface:PreviewView
-    private lateinit var vCameraSurface:SurfaceView
+    private lateinit var vCameraSurface:PreviewView
+//    private lateinit var vCameraSurface:SurfaceView
     private var fileName = ""; var path = ""
     private lateinit var threadCamera:Thread
     private lateinit var threadCommand:Thread
@@ -61,8 +62,8 @@ class ActivityCamera : AppCompatActivity() {
         threadCamera = Thread {
             try {
                 //  Init
-//                camera = MyCameraCameraX(this, vCameraSurface, path, intent.extras!!.getInt(VIDEO_PROFILE))
-                camera = MyCameraMediaRecorder(path, vCameraSurface, this, timerSynchronized)
+                camera = MyCameraCameraX(this, vCameraSurface, path, intent.extras!!.getInt(VIDEO_PROFILE), timerSynchronized)
+//                camera = MyCameraMediaRecorder(path, vCameraSurface, this, timerSynchronized)
                 //wait & do
                 timerSynchronized.sleepUntil(cameraInstance.correctedTimeStartCamera)
                 camera!!.startRecord()
