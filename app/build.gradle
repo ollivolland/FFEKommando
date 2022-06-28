@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId "com.ollivolland.ffekommando"
-        minSdk 26
+        minSdk 23
         targetSdk 32
         versionCode 5
         versionName "2022-06-22E"

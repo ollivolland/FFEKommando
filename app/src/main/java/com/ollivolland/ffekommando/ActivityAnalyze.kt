@@ -21,7 +21,6 @@ import java.nio.ByteBuffer
 import kotlin.collections.set
 import kotlin.concurrent.thread
 import kotlin.math.absoluteValue
-import kotlin.math.pow
 import kotlin.math.sign
 import kotlin.math.sqrt
 
@@ -40,64 +39,72 @@ class ActivityAnalyze : AppCompatActivity() {
 
         //  Files
         val dir = File("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).absolutePath}/Camera")
-        val path = dir.listFiles()!!.toMutableList().maxBy { x -> File(x.absolutePath).lastModified() }.absolutePath
-
-        //  Metadata
-        val mediaMeta: MetadataEditor = MetadataEditor.createFrom(File(path))
-        val meta: MutableMap<String, MetaValue> = mediaMeta.keyedMeta
-        val json = JSONObject(meta["com.apple.quicktime.title"].toString())
-        val timeToStart = (Globals.formatToMillis.parse(json["dateCommand"].toString())!!.time - Globals.formatToMillis.parse(json["dateVideoStart"].toString())!!.time) * 0.001
-
-        //  accurate frame time
-        val timeOfFrame = mutableMapOf<Int, Double>()
-        val extractor = MediaExtractor()
-        extractor.setDataSource(path)
-        for (i in 0 until extractor.trackCount) {
-            val format = extractor.getTrackFormat(i)
-            val mime = format.getString(MediaFormat.KEY_MIME)
-
-            if (mime!!.contains("video")) {
-                val bufferSize = format.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE)
-
-                extractor.selectTrack(i)
-                val inputBuffer = ByteBuffer.allocate(bufferSize)
-                var index = 0
-
-                while (extractor.readSampleData(inputBuffer, 0) >= 0) {
-                    timeOfFrame[index] = extractor.sampleTime * 0.000001 - timeToStart
-
-                    extractor.advance()
-                    index++
-                }
-            }
-        }
-        extractor.release()
-
-        //  Video analysis
-        if(Build.VERSION.SDK_INT <= 28) return
-
-        val mediaMetadataRetriever = MediaMetadataRetriever()
-        mediaMetadataRetriever.setDataSource(path)
-        val frameCount = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_FRAME_COUNT)!!.toInt()
-        val duration =  mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)!!.toLong()
-        val fps = frameCount / (duration * 0.001)
-
-        vText.text = "frameCount = $frameCount\nfps = ${fps.format(2)}\nduration = $duration"
-
-        val start = (timeToStart * fps).toInt()
-        var frameLast: Bitmap = mediaMetadataRetriever.getFrameAtIndex(start)!!
-        var isPart = false
-        val partBroken = mutableListOf<Double>()
-        val listFrameIndex = mutableListOf<Int>()
-        val listFirstFrameWithBodyIndex = mutableListOf<Int>()
+        val path = dir.listFiles()!!.toMutableList()
+            .filter { x -> x.path.endsWith(".mp4") }
+            .maxBy { x -> File(x.absolutePath).lastModified() }.absolutePath
 
         thread {
+            analyze(path, { interests ->
+                //  Display
+                interests.forEach { interest ->
+                    if(Build.VERSION.SDK_INT < 28) return@forEach
+
+                    val timeOfFrame = getTimesOfFramesMillis(path)
+                    val timeToStart = getTimeToStartMillis(path)
+                    val mediaMetadataRetriever = MediaMetadataRetriever()
+                    mediaMetadataRetriever.setDataSource(path)
+
+                    runOnUiThread {
+                        val inflatedView: View = View.inflate(this, R.layout.view_image, null)
+                        val image = inflatedView.findViewById<ImageView>(R.id.image_iImage)
+                        val image2 = inflatedView.findViewById<ImageView>(R.id.image_iImage2)
+                        val text = inflatedView.findViewById<TextView>(R.id.image_tText)
+                        image.setImageBitmap(mediaMetadataRetriever.getFrameAtIndex(interest.best)!!)
+
+                        thread {
+                            val static = getDifferenceBitmap(mediaMetadataRetriever, interest.best) { times ->
+                                val triangulated = timeOfFrame[interest.best]!! + times * (timeOfFrame[interest.best]!! - timeOfFrame[interest.best - 1]!!) - timeToStart
+                                runOnUiThread { text.text = text.text.toString() + "\ntriangulated = ${"%.3f".format(triangulated * 0.001)} s" }
+                            }
+                            runOnUiThread { image2.setImageBitmap(static) }
+                        }
+                        text.text = "frame time = ${"%.3f".format((timeOfFrame[interest.best]!! - timeToStart) * 0.001)} s"
+
+                        vParent.addView(inflatedView)
+                    }
+                }
+            }, { progress ->
+                runOnUiThread { vText.text = "progress = ${"%.2f".format(progress)}" }
+            } )
+        }
+    }
+
+    companion object {
+        const val MIN_LINE_BROKEN_FOR_REGISTER = 0.1
+
+        fun analyze(path:String, func:(List<Interest>) -> Unit, progress:(Double) -> Unit = {}) {
+            if(Build.VERSION.SDK_INT <= 28) return
+
+            val mediaMetadataRetriever = MediaMetadataRetriever()
+            mediaMetadataRetriever.setDataSource(path)
+            val frameCount = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_FRAME_COUNT)!!.toInt()
+            val duration =  mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)!!.toLong()
+            val fps = frameCount / (duration * 0.001)
+
+            val start = (getTimeToStartMillis(path) * 0.001 * fps).toInt()
+            var frameLast: Bitmap = mediaMetadataRetriever.getFrameAtIndex(start)!!
+            var isPart = false
+            val partBroken = mutableListOf<Double>()
+            val listFrameIndex = mutableListOf<Int>()
+            val listFirstFrameWithBodyIndex = mutableListOf<Int>()
+            val listInterests = mutableListOf<Interest>()
+
             for (i in start + 1 until frameCount) {
                 val frameCurrent: Bitmap = mediaMetadataRetriever.getFrameAtIndex(i)!!
                 val xOfLine = frameCurrent.width / 2
                 val thisLineBroken = percentBroken(frameCurrent, frameLast, xOfLine)
 
-                isPart = if(thisLineBroken > Companion.MIN_LINE_BROKEN_FOR_REGISTER && i != frameCount - 1) {
+                isPart = if(thisLineBroken > MIN_LINE_BROKEN_FOR_REGISTER && i != frameCount - 1) {
                     if(!isPart) listFrameIndex.add(i)
 
                     partBroken.add(thisLineBroken)
@@ -108,121 +115,122 @@ class ActivityAnalyze : AppCompatActivity() {
                         listFirstFrameWithBodyIndex.add(listFrameIndex.last() + partBroken.indexOfFirst { x -> x >= partMax * 0.8 })
 
                         partBroken.clear()
+                        listInterests.add(Interest(listFrameIndex.last(), i - 1, listFirstFrameWithBodyIndex.last()))
                     }
 
                     false
                 }
 
                 frameLast = frameCurrent
-
-                if(i % 10 == 0) runOnUiThread { vText2.text = "frame num $i" }
+                progress(i.toDouble() / frameCount)
             }
 
-            //  Display
-            runOnUiThread {
-                listFrameIndex.forEachIndexed { index, _ ->
-                    val frameIndexCrossedWithBody = listFirstFrameWithBodyIndex[index]
-                    val inflatedView: View = View.inflate(this, R.layout.view_image, null)
-                    val image = inflatedView.findViewById<ImageView>(R.id.image_iImage)
-                    val image2 = inflatedView.findViewById<ImageView>(R.id.image_iImage2)
-                    val text = inflatedView.findViewById<TextView>(R.id.image_tText)
-                    image.setImageBitmap(mediaMetadataRetriever.getFrameAtIndex(frameIndexCrossedWithBody)!!)
-                    thread {
-                        val static = getDifferenceBitmap(mediaMetadataRetriever, frameIndexCrossedWithBody,
-                            frameLast.width, frameLast.height, frameLast.config, frameLast.width / 2
-                        ) { wheightFirst, wheightLast ->    //  ORDER IMPORTANT!!!!
-                            runOnUiThread { text.text = text.text.toString() + "\ntriangulated = ${"%.3f".format(timeOfFrame[frameIndexCrossedWithBody]!! * wheightFirst + timeOfFrame[frameIndexCrossedWithBody - 1]!! * wheightLast)} s" }
-                        }
-                        runOnUiThread { image2.setImageBitmap(static) }
-                    }
-                    text.text = "frame time = ${"%.3f".format(timeOfFrame[frameIndexCrossedWithBody]!!)} s"
+            mediaMetadataRetriever.release()
+            func(listInterests.take(5))
+        }
 
-                    vParent.addView(inflatedView)
+        fun getTimesOfFramesMillis(path: String):Map<Int, Long> {
+            val timeOfFrame = mutableMapOf<Int, Long>()
+            val extractor = MediaExtractor()
+            extractor.setDataSource(path)
+            for (i in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME)
+
+                if (mime!!.contains("video")) {
+                    val bufferSize = format.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE)
+
+                    extractor.selectTrack(i)
+                    val inputBuffer = ByteBuffer.allocate(bufferSize)
+                    var index = 0
+
+                    while (extractor.readSampleData(inputBuffer, 0) >= 0) {
+                        timeOfFrame[index] = (extractor.sampleTime * 0.001).toLong()
+
+                        extractor.advance()
+                        index++
+                    }
                 }
             }
-        }
-    }
-
-    private fun getDifferenceBitmap(retriever: MediaMetadataRetriever, frameIndex:Int, width:Int, height:Int, config:Bitmap.Config, xOfLine:Int, lambda:(Double, Double) -> Unit):Bitmap {
-        if (Build.VERSION.SDK_INT <= 28) throw Exception("wrong sdk")
-
-        val outMap = Bitmap.createBitmap(width, height, config)
-
-        val thisBitmap = retriever.getFrameAtIndex(frameIndex)!!
-        val lastBitmap = retriever.getFrameAtIndex(frameIndex-1)!!
-
-        for (index in 0 until width * height) {
-            val x = index % width
-            val y = index / width
-
-            outMap[x, y] = if(isBroken(thisBitmap[x, y], lastBitmap[x, y])) Color.BLACK else Color.RED
+            extractor.release()
+            return timeOfFrame
         }
 
-        val firstBody = xOfBroken(thisBitmap, lastBitmap)
-        val previousBody = xOfBroken(lastBitmap, retriever.getFrameAtIndex(frameIndex-2)!!)
-        val directionCheck = xOfBroken(retriever.getFrameAtIndex(frameIndex-5)!!, retriever.getFrameAtIndex(frameIndex-6)!!)
-
-        val direction = (firstBody.first - directionCheck.first + firstBody.second - directionCheck.second).sign
-
-        val firstX: Int
-        val previousX: Int
-
-        if(direction == -1) {
-            firstX = firstBody.first
-            previousX = previousBody.first
-        } else {
-            firstX = firstBody.second
-            previousX = previousBody.second
+        fun getTimeToStartMillis(path:String):Long {
+            val mediaMeta: MetadataEditor = MetadataEditor.createFrom(File(path))
+            val meta: MutableMap<String, MetaValue> = mediaMeta.keyedMeta
+            val json = JSONObject(meta["com.apple.quicktime.title"].toString())
+            return (Globals.formatToMillis.parse(json["dateCommand"].toString())!!.time - Globals.formatToMillis.parse(json["dateVideoStart"].toString())!!.time)
         }
 
-        val deltaTot = (firstX - previousX).absoluteValue.toDouble()
-        val first = (firstX - xOfLine).absoluteValue
-        val previous = (previousX - xOfLine).absoluteValue
-        lambda(1 - first / deltaTot, 1 - previous / deltaTot)
+        fun getDifferenceBitmap(retriever: MediaMetadataRetriever, frameIndex:Int, initXOfLine:Int = -1, lambda:(Double) -> Unit):Bitmap {
+            if (Build.VERSION.SDK_INT <= 28) throw Exception("wrong sdk")
 
-        paintBarOnBitmap(outMap, firstX, 2, Color.LTGRAY)
-        paintBarOnBitmap(outMap, previousX, 2, Color.DKGRAY)
-        paintBarOnBitmap(outMap, xOfLine, 2, Color.GREEN)
+            val thisBitmap = retriever.getFrameAtIndex(frameIndex)!!
+            val lastBitmap = retriever.getFrameAtIndex(frameIndex-1)!!
+            val width = thisBitmap.width
+            val height = thisBitmap.height
+            val config = thisBitmap.config
+            val xOfLine = if(initXOfLine == -1) width / 2 else initXOfLine
+            val outMap = Bitmap.createBitmap(width, height, config)
 
-        return outMap
-    }
+            for (index in 0 until width * height) {
+                val x = index % width
+                val y = index / width
 
-    private fun xOfBroken(frameCurrent:Bitmap, frameLast:Bitmap):Pair<Int, Int> {
-        val percentBroken = (0 until frameCurrent.width).map { x -> percentBroken(frameCurrent, frameLast, x) }.toTypedArray()
-        val maxBroken = percentBroken.max()
+                outMap[x, y] = if(isBroken(thisBitmap[x, y], lastBitmap[x, y])) Color.RED else Color.BLACK
+            }
 
-        return Pair(percentBroken.indexOfFirst { p -> p >= maxBroken * 0.8 }, percentBroken.indexOfLast { p -> p >= maxBroken * 0.8 })
-    }
+            val firstBody = xOfBroken(thisBitmap, lastBitmap)
+            val previousBody = xOfBroken(lastBitmap, retriever.getFrameAtIndex(frameIndex-2)!!)
+            val direction = (firstBody.first - previousBody.first + firstBody.second - previousBody.second).sign
+            val firstX = if(direction == -1) firstBody.first else firstBody.second
+            val previousX = if(direction == -1) previousBody.first else previousBody.second
 
-    private fun percentBroken(frameCurrent:Bitmap, frameLast:Bitmap, posX:Int):Double {
-        return (0 until frameCurrent.height).count { y ->
-            isBroken(frameCurrent[posX, y], frameLast[posX, y])
-        }.toDouble() / frameCurrent.height
-    }
+            lambda((xOfLine - firstX).toDouble() / (firstX - previousX))
 
-    private inline fun paintBarOnBitmap(bitmap: Bitmap, xCenter:Int, width: Int, color: Int) {
-        for (x in xCenter-width until  xCenter+width + 1)
-            for (y in 0 until bitmap.height)
-                bitmap[x, y] = color
-    }
+            paintBarOnBitmap(outMap, firstX, 2, Color.LTGRAY)
+            paintBarOnBitmap(outMap, previousX, 2, Color.DKGRAY)
+            paintBarOnBitmap(outMap, xOfLine, 2, Color.GREEN)
 
-    private fun distanceEuclidean(a: Int, b: Int): Double {
-        val deltaR: Int = (a.red - b.red)
-        val deltaG: Int = (a.green - b.green)
-        val deltaB: Int = (a.blue - b.blue)
+            return outMap
+        }
 
-        return sqrt((deltaR * deltaR + deltaG * deltaG + deltaB * deltaB).toDouble() / 195075)
-    }
+        private fun xOfBroken(frameCurrent:Bitmap, frameLast:Bitmap):Pair<Int, Int> {
+            val percentBroken = (0 until frameCurrent.width).map { x -> percentBroken(frameCurrent, frameLast, x) }.toTypedArray()
+            val maxBroken = percentBroken.max()
 
-    private fun isBroken(a: Int, b: Int): Boolean {
-        val deltaR: Int = (a.red - b.red)
-        val deltaG: Int = (a.green - b.green)
-        val deltaB: Int = (a.blue - b.blue)
+            return Pair(percentBroken.indexOfFirst { p -> p >= maxBroken * 0.8 }, percentBroken.indexOfLast { p -> p >= maxBroken * 0.8 })
+        }
 
-        return (deltaR * deltaR + deltaG * deltaG + deltaB * deltaB) > 1952 //  195075 * 0.1^2
-    }
+        private fun percentBroken(frameCurrent:Bitmap, frameLast:Bitmap, posX:Int):Double {
+            return (0 until frameCurrent.height).count { y ->
+                isBroken(frameCurrent[posX, y], frameLast[posX, y])
+            }.toDouble() / frameCurrent.height
+        }
 
-    companion object {
-        const val MIN_LINE_BROKEN_FOR_REGISTER = 0.1
+        private inline fun paintBarOnBitmap(bitmap: Bitmap, xCenter:Int, width: Int, color: Int) {
+            for (x in xCenter-width until  xCenter+width + 1)
+                for (y in 0 until bitmap.height)
+                    bitmap[x, y] = color
+        }
+
+        private fun distanceEuclidean(a: Int, b: Int): Double {
+            val deltaR: Int = (a.red - b.red)
+            val deltaG: Int = (a.green - b.green)
+            val deltaB: Int = (a.blue - b.blue)
+
+            return sqrt((deltaR * deltaR + deltaG * deltaG + deltaB * deltaB).toDouble() / 195075)
+        }
+
+        private fun isBroken(a: Int, b: Int): Boolean {
+            val deltaR: Int = (a.red - b.red)
+            val deltaG: Int = (a.green - b.green)
+            val deltaB: Int = (a.blue - b.blue)
+
+            return (deltaR * deltaR + deltaG * deltaG + deltaB * deltaB) > 1952 //  195075 * 0.1^2
+        }
+
+        class Interest(val start:Int, val end:Int, val best:Int)
     }
 }

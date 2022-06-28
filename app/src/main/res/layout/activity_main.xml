@@ -68,7 +68,7 @@
                 android:text="Kamera"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:checked="true"
+                android:checked="false"
                 app:switchPadding="20dp"
                 />
 
@@ -76,6 +76,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Kommando"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:checked="false"
+                app:switchPadding="20dp"
+                />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/main_sAnalyze"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Analyze"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:checked="false"

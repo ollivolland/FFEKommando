@@ -4,12 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.media.CamcorderProfile
-import android.media.MediaMetadataRetriever
 import android.os.Bundle
 import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
-import android.view.SurfaceView
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
@@ -77,6 +74,8 @@ class ActivityCamera : AppCompatActivity() {
                     camera?.stopRecord()
                     Thread.sleep(1000)
                     tryWriteMetadata()
+
+                    lambda(path)
                 }
             }
             catch (e: Exception) {
@@ -206,11 +205,13 @@ class ActivityCamera : AppCompatActivity() {
         private const val VIDEO_PROFILE = "videoProfile"
         var nextInstance:CameraInstance? = null
         var timerSynchronized:MyTimer? = null
+        var lambda: (String) -> Unit = {}
 
-        fun startCamera(activity:Activity, config: CameraInstance, timerSynchronized: MyTimer)
+        fun startCamera(activity:Activity, config: CameraInstance, timerSynchronized: MyTimer, lambda: (String) -> Unit)
         {
             nextInstance = config
             this.timerSynchronized = timerSynchronized
+            this.lambda = lambda
 
             activity.startActivity(Intent(activity, ActivityCamera::class.java).apply {
                 putExtra(VIDEO_PROFILE, CamcorderProfile.QUALITY_1080P)

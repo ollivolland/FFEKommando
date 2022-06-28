@@ -27,6 +27,7 @@ class ActivityMain: AppCompatActivity()
     lateinit var bSlave:Button
     lateinit var sCamera:SwitchMaterial
     lateinit var sCommand:SwitchMaterial
+    lateinit var sAnalyze:SwitchMaterial
     lateinit var db: MyDB
     lateinit var locationManager:LocationManager
     private val locationListener = object : LocationListener {
@@ -45,6 +46,9 @@ class ActivityMain: AppCompatActivity()
                 "Time GPS: $time, delay = $thisDelay (${location.provider}) => $delay" +
                         ", stdev = ${delayList.stdev().format(2)}"
             )
+
+            delay = if(delayList.isEmpty()) 0 else delayList.mean().toLong()
+            delayStdDev = if(delayList.isEmpty()) 0.0 else delayList.stdev()
         }
 
         override fun onProviderEnabled(provider: String) {}
@@ -78,6 +82,7 @@ class ActivityMain: AppCompatActivity()
         val bAnalyze:Button = findViewById(R.id.main_bAnalyze)
         sCamera = findViewById(R.id.main_sCamera)
         sCommand = findViewById(R.id.main_sCommand)
+        sAnalyze = findViewById(R.id.main_sAnalyze)
         val vSpinnerCommand = findViewById<Spinner>(R.id.spinnerCommand)
         val vSpinnerDuration = findViewById<Spinner>(R.id.spinnerDuration)
         val vSpinnerDelay = findViewById<Spinner>(R.id.spinnerDelay)
@@ -86,26 +91,28 @@ class ActivityMain: AppCompatActivity()
         bMaster.setOnClickListener { startMaster() }
         bSlave.setOnClickListener { startSlave() }
         bAnalyze.setOnClickListener { startActivity(Intent(this, ActivityAnalyze::class.java)) }
-        CameraConfig.default.isCamera = sCamera.isChecked
-        sCamera.setOnClickListener { CameraConfig.default.isCamera = sCamera.isChecked }
-        CameraConfig.default.isCommand = sCommand.isChecked
-        sCommand.setOnClickListener { CameraConfig.default.isCommand = sCommand.isChecked }
+        DefaultCameraConfig.default.isCamera = sCamera.isChecked
+        sCamera.setOnClickListener { DefaultCameraConfig.default.isCamera = sCamera.isChecked }
+        DefaultCameraConfig.default.isCommand = sCommand.isChecked
+        sCommand.setOnClickListener { DefaultCameraConfig.default.isCommand = sCommand.isChecked }
+        DefaultCameraConfig.default.isAnalyze = sAnalyze.isChecked
+        sAnalyze.setOnClickListener { DefaultCameraConfig.default.isAnalyze = sAnalyze.isChecked }
 
         tText.append("version = $versionName")
 
         val selectionCommandBuilder = arrayOf("feuerwehr", "feuerwehr_slowenisch", "leichtathletik10", "leichtathletik30", "feuerwehrstaffel")
         configSpinner(vSpinnerCommand, arrayOf("feuerwehr", "feuerwehr slowenisch", "leichtathletik 10 sek", "leichtathletik 30 sek", "feuerwehrstaffel")) { i ->
-            CameraConfig.default.commandBuilder = selectionCommandBuilder[i]
+            DefaultCameraConfig.default.commandBuilder = selectionCommandBuilder[i]
         }
 
         val selectionDuration = arrayOf(60_000L, 30_000L, 100_000L, 10_000L)
         configSpinner(vSpinnerDuration, arrayOf("60 sek", "30 sek", "100 sek", "10 sek")) { i ->
-            CameraConfig.default.millisVideoDuration = selectionDuration[i]
+            DefaultCameraConfig.default.millisVideoDuration = selectionDuration[i]
         }
 
         val selectionDelay = arrayOf(3_000L, 10_000L, 60_000L, 150_000L, 300_000L, 600_000L)
         configSpinner(vSpinnerDelay, arrayOf("Δ+3 sek", "Δ+10 sek", "Δ+60 sek", "Δ+150 sek", "Δ+300 sek", "Δ+600 sek")) { i ->
-            CameraConfig.default.millisDelay = selectionDelay[i]
+            DefaultCameraConfig.default.millisDelay = selectionDelay[i]
         }
 
         db = MyDB(this)
@@ -218,8 +225,9 @@ class ActivityMain: AppCompatActivity()
     private val versionName:String get() = applicationContext.packageManager.getPackageInfo(applicationContext.packageName, 0).versionName
 
     companion object {
-        val delayList:MutableList<Long> = mutableListOf()
-        val delay:Long get() = if(delayList.isEmpty()) 0 else delayList.mean().toLong()
+        private val delayList:MutableList<Long> = mutableListOf()
+        var delay:Long = 0
+        var delayStdDev:Double = 0.0
         val timerSynchronized:MyTimer get() = MyTimer(delay)
     }
 }

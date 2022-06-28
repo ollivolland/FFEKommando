@@ -6,10 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.TimePicker
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import java.util.*
 
@@ -19,7 +16,7 @@ class ActivityController : AppCompatActivity() {
     var text:String = ""
     private val listRegisteredCamerasStarts = mutableListOf<Long>()
     private val listPlannedCameraStarts = mutableListOf<CameraInstance>()
-    private val mapCameraInstanceToView = mutableMapOf<CameraInstance, View>()
+    private val mapCameraInstanceToView = mutableMapOf<CameraInstance, ViewInstance>()
     private lateinit var vParent:LinearLayout
 
     @SuppressLint("SetTextI18n")
@@ -42,8 +39,8 @@ class ActivityController : AppCompatActivity() {
 
             bStart.setOnClickListener {
                 val timerSynchronized = ActivityMain.timerSynchronized
-                val timeStartCamera = timerSynchronized.time + CameraConfig.default.millisDelay
-                val withConfig = CameraConfig.default.generateInstance(this, timeStartCamera)
+                val timeStartCamera = timerSynchronized.time + DefaultCameraConfig.default.millisDelay
+                val withConfig = DefaultCameraConfig.default.generateInstance(this, timeStartCamera)
 
                 db["masters/$myId/sessions/$timeStartCamera"] = hashMapOf(
                     "correctedTimeCameraStart" to withConfig.correctedTimeStartCamera,
@@ -74,7 +71,7 @@ class ActivityController : AppCompatActivity() {
                         calendar[Calendar.MINUTE] = vTimePicker.minute
                         calendar[Calendar.SECOND] = 0
 
-                        val withConfig = CameraConfig.default.generateInstance(this, calendar.timeInMillis)
+                        val withConfig = DefaultCameraConfig.default.generateInstance(this, calendar.timeInMillis)
 
                         db["masters/$myId/sessions/${calendar.timeInMillis}"] = hashMapOf(
                             "correctedTimeCameraStart" to withConfig.correctedTimeStartCamera,
@@ -98,8 +95,9 @@ class ActivityController : AppCompatActivity() {
                     if(listRegisteredCamerasStarts.contains(timeStartCamera) || timeStartCamera < timerSynchronized.time) return@forEach
 
                     val withConfig = CameraInstance(
-                        isCamera = CameraConfig.default.isCamera,
-                        isCommand = CameraConfig.default.isCommand,
+                        isCamera = DefaultCameraConfig.default.isCamera,
+                        isCommand = DefaultCameraConfig.default.isCommand,
+                        isAnalyze = DefaultCameraConfig.default.isAnalyze,
                         commandFullName = command,
                         correctedTimeStartCamera = timeStartCamera,
                         correctedTimeCommandExecuted = child.child("correctedTimeCommandExecuted").value as Long,
@@ -118,10 +116,14 @@ class ActivityController : AppCompatActivity() {
                 val time = ActivityMain.timerSynchronized.time
 
                 runOnUiThread {
-                    tText.text = text +
-                        "\n\ndelay to GPS satellite = ${ActivityMain.delayList.mean().format(2)} ms" +
-                        " ± ${ActivityMain.delayList.stdev().format(2)} ms\n" +
-                        "time = ${Globals.formatToTimeOfDay.format(Date(time))}"
+                    try {
+                        tText.text = text +
+                                "\n\ndelay to GPS satellite = ${
+                                    ActivityMain.delay
+                                } ms" +
+                                " ± ${ActivityMain.delayStdDev.format(2)} ms\n" +
+                                "time = ${Globals.formatToTimeOfDay.format(Date(time))}"
+                    } catch (e:Exception) {}
                 }
 
                 //  start planned cameras
@@ -145,21 +147,21 @@ class ActivityController : AppCompatActivity() {
         listRegisteredCamerasStarts.add(config.correctedTimeStartCamera)
         listPlannedCameraStarts.add(config)
 
-        //  View
-        val view = layoutInflater.inflate(R.layout.view_camera_instance, vParent, false)
-        val vViewText = view.findViewById<TextView>(R.id.camera_instance_tText)
-
-        vViewText.text = "start at ${Globals.formatToTimeOfDay.format(Date(config.correctedTimeStartCamera))}"
-
-        mapCameraInstanceToView[config] = view
-        runOnUiThread { vParent.addView(view) }
+        mapCameraInstanceToView[config] = ViewInstance(this, vParent)
+        mapCameraInstanceToView[config]!!.let { view ->
+            runOnUiThread {
+                view.vViewText.text = "start at ${Globals.formatToTimeOfDay.format(Date(config.correctedTimeStartCamera))}"
+                vParent.addView(view.container, 1)
+            }
+        }
     }
 
     private fun startCamera(config: CameraInstance) {
-        ActivityCamera.startCamera(this, config, ActivityMain.timerSynchronized)
-        listPlannedCameraStarts.remove(config)
+        ActivityCamera.startCamera(this, config, ActivityMain.timerSynchronized) { s ->
+            mapCameraInstanceToView[config]!!.update(s, config)
+        }
 
-        runOnUiThread { vParent.removeView(mapCameraInstanceToView[config]) }
+        listPlannedCameraStarts.remove(config)
     }
 
     companion object {
@@ -169,7 +171,10 @@ class ActivityController : AppCompatActivity() {
         var masterId = ""
 
         fun launchMaster(context: Context, myId:String) {
-            if(isExists) throw Exception("Activity already exists")
+            if(isExists) {
+                Toast.makeText(context, "Activity already exists", Toast.LENGTH_LONG).show()
+                return
+            }
 
             isMaster = true
             this.myId = myId
@@ -179,7 +184,10 @@ class ActivityController : AppCompatActivity() {
         }
 
         fun launchSlave(context: Context, myId:String, masterId:String) {
-            if(isExists) throw Exception("Activity already exists")
+            if(isExists) {
+                Toast.makeText(context, "Activity already exists", Toast.LENGTH_LONG).show()
+                return
+            }
 
             isMaster = false
             this.myId = myId
