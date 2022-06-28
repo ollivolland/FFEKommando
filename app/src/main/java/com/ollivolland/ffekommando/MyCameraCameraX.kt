@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.SystemClock
+import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
@@ -13,9 +14,7 @@ import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import java.io.BufferedReader
 import java.io.File
-import java.io.InputStreamReader
 import kotlin.concurrent.thread
 
 
@@ -28,8 +27,8 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
     private val executor = ContextCompat.getMainExecutor(activity)
     private var isHasCaptured = false
     private var isVideoSaved = false
-    private var isStartTimeWritten = false
     private var recording:Recording? = null
+    private var logCatReader:LogCatReader? = null
 
     init {
         log += "init"
@@ -61,17 +60,17 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
             when (it) {
                 is VideoRecordEvent.Start -> {
                     log += "VIDEO START ${SystemClock.uptimeMillis()}000"
+                    logCatReader = LogCatReader()
                 }
                 is VideoRecordEvent.Pause -> {
                     log += "VIDEO PAUSE ${SystemClock.uptimeMillis() - (it.recordingStats.recordedDurationNanos / 1E6).toLong()}000"
                 }
                 is VideoRecordEvent.Finalize -> {
-                    getStartTimeUs { timeUs ->
+                    try {
+                        val timeUs = logCatReader!!.getStartTimeUsAndDestroy()
                         log += "TIME START = $timeUs"
                         timeSynchronizedStartedRecording = timerSynchronized.time - SystemClock.uptimeMillis() + (timeUs / 1000)
-
-                        isStartTimeWritten = true
-                    }
+                    } catch (e:Exception) { Toast.makeText(activity, "error in logcat spying", Toast.LENGTH_LONG).show() }
 
                     log += "VIDEO FINALIZED"
                     isVideoSaved = true
@@ -87,7 +86,7 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
         cameraProviderFuture.cancel(true)
         activity.runOnUiThread { cameraProvider.unbindAll() }
 
-        while (!isVideoSaved || !isStartTimeWritten) Thread.sleep(10)
+        while (!isVideoSaved) Thread.sleep(10)
     }
 
     @SuppressLint("RestrictedApi")
@@ -113,20 +112,31 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
         cameraProvider.bindToLifecycle(activity as LifecycleOwner, cameraSelector, videoCapture, preview)
     }
 
-    private fun getStartTimeUs(func:(Long) -> Unit) {
-        thread {
-            val process = Runtime.getRuntime().exec("logcat -d")
-            val bufferedReader = BufferedReader(InputStreamReader(process.inputStream))
+    companion object {
+        class LogCatReader() {
 
-            var line: String? = ""
-            while (bufferedReader.readLine().also { line = it } != null)
-                if(line!!.contains("MPEG4Writer") && line!!.contains("setStartTimestampUs")) {
-                    val time = line!!.split(" ").last().toLong()
-                    func(time)
-                    return@thread
+            private val lines = mutableListOf<String>()
+            var process:Process? = null
+
+            init {
+                thread {
+                    val process = Runtime.getRuntime().exec("logcat")
+                    process.inputStream
+                        .bufferedReader()
+                        .useLines { newLines -> newLines.forEach { line -> lines.add(line) } }
                 }
+            }
 
-            throw Exception("time not found")
+            fun getStartTimeUsAndDestroy(): Long {
+                val targetLine =
+                    lines.toTypedArray().last { x -> x.contains("MPEG4Writer") && x.contains("setStartTimestampUs") }
+                val time = targetLine.split(" ").last().toLong()
+
+                //  terminate
+                process?.destroy()
+
+                return time
+            }
         }
     }
 }

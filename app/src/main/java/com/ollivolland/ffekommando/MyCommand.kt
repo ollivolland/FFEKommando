@@ -10,7 +10,7 @@ abstract class MyCommand(activity: Activity) {
     abstract val time:Long
     abstract val name:String
     var observedCommandLag:Long = -1
-    abstract fun start()
+    abstract fun startAt(timer: MyTimer, time: Long)
     abstract fun prepare()
     abstract fun stopAndRelease()
 
@@ -90,7 +90,6 @@ abstract class MyCommand(activity: Activity) {
             return object : MyCommand(activity) {
                 val mps: Array<MediaPlayer> = listRawIds.map { x -> MediaPlayer.create(activity, x) }.toTypedArray()
                 val mpNoise = MediaPlayer.create(activity, R.raw.whitenoise)
-                var timeStart:Long = -1L
 
                 override val time: Long = executionDelay
                 override val name: String = "$buildName&${listDelayFromStart.joinToString(separator = "&")}"
@@ -99,28 +98,26 @@ abstract class MyCommand(activity: Activity) {
                     mpNoise.isLooping = true
                 }
 
-                override fun start() {  //  IN SYSTEM TIME  bc. of standard deviation in gpstime
-                    timeStart = System.currentTimeMillis()
-
+                override fun startAt(timer: MyTimer, time: Long) {  //  IN SYSTEM TIME  bc. of standard deviation in gps time
                     thread { mpNoise.start() }
 
                     for (i in 0 until mps.count())
                         thread {
                             try {
-                                val startAt = timeStart + listDelayFromStart[i]
-                                sleepUntil(startAt)
+                                val startAt = time + listDelayFromStart[i]
+                                timer.sleepUntil(startAt)
                                 mps[i].start()
                                 Log.i("COMMAND", "MediaPlayer[$i] started")
 
                                 mps[i].setOnSeekCompleteListener { Log.i("COMMAND", "MediaPlayer[$i] seek complete") }
 
                                 sleepUntil { mps[i].currentPosition >= 10 }
-                                Log.i("COMMAND", "MediaPlayer[$i] pos positive, current lag = ${System.currentTimeMillis() - startAt - mps[i].currentPosition}")
-                                mps[i].seekTo((System.currentTimeMillis() - startAt).toInt())
+                                Log.i("COMMAND", "MediaPlayer[$i] pos positive, current lag = ${timer.time - startAt - mps[i].currentPosition}")
+                                mps[i].seekTo((timer.time - startAt).toInt())
 
                                 //  observe lag
                                 if(i == mps.count() - 1)  {
-                                    val delay = System.currentTimeMillis() - startAt - mps[i].currentPosition
+                                    val delay = timer.time - startAt - mps[i].currentPosition
                                     observedCommandLag = delay
                                     Log.i("COMMAND", "MediaPlayer[$i] lag = $delay ms")
                                 }

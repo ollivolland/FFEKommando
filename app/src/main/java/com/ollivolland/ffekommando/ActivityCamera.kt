@@ -94,8 +94,7 @@ class ActivityCamera : AppCompatActivity() {
                 commandWrapper.prepare()
 
                 //  wait & do
-                timerSynchronized.sleepUntil(cameraInstance.correctedTimeStartCamera)
-                commandWrapper.start()
+                commandWrapper.startAt(timerSynchronized, cameraInstance.correctedTimeStartCamera)
 
                 Thread.sleep(Long.MAX_VALUE)
             } catch (e: Exception) {

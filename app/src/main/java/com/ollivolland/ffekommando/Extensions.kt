@@ -16,8 +16,6 @@ fun <T> MutableList<T>.stdev():Double where T : Number {
 
 fun Double.format(digits: Int) = "%.${digits}f".format(this)
 
-fun sleepUntil(unixTime:Long) = Thread.sleep(max(unixTime - System.currentTimeMillis(), 0))
-
 fun sleepUntil(predicate:() -> Boolean) {
     while (!predicate()) Thread.sleep(10)
 }
