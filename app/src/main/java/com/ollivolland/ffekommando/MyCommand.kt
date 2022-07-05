@@ -45,8 +45,8 @@ abstract class MyCommand(activity: Activity) {
                     }.build()
                 }
                 "leichtathletik10" -> {
-                    val delayToReady = random.nextLong(5_000L, 10_000L)
-                    val delayToShot = random.nextLong(3_000L,5_000L)
+                    val delayToReady = random.nextLong(10_000L, 15_000L)
+                    val delayToShot = random.nextLong(2_000L,3_500L)
 
                     return MyCommandBuilder(activity, key).apply {
                         this[R.raw.aufdieplaetze] = 0L
@@ -56,8 +56,8 @@ abstract class MyCommand(activity: Activity) {
                     }.build()
                 }
                 "leichtathletik30" -> {
-                    val delayToReady = random.nextLong(15_000L, 30_000L)
-                    val delayToShot = random.nextLong(3_000L,5_000L)
+                    val delayToReady = random.nextLong(20_000L, 30_000L)
+                    val delayToShot = random.nextLong(2_000L,3_500L)
 
                     return MyCommandBuilder(activity, key).apply {
                         this[R.raw.aufdieplaetze] = 0L
@@ -89,14 +89,16 @@ abstract class MyCommand(activity: Activity) {
 
             return object : MyCommand(activity) {
                 val mps: Array<MediaPlayer> = listRawIds.map { x -> MediaPlayer.create(activity, x) }.toTypedArray()
-                val mpNoise = MediaPlayer.create(activity, R.raw.whitenoise)
+                val mpNoise = MediaPlayer.create(activity, R.raw.whitenoise_point_01db)
 
                 override val time: Long = executionDelay
                 override val name: String = "$buildName&${listDelayFromStart.joinToString(separator = "&")}"
 
-                override fun prepare() {
+                init {
                     mpNoise.isLooping = true
                 }
+
+                override fun prepare() { }
 
                 override fun startAt(timer: MyTimer, time: Long) {  //  IN SYSTEM TIME  bc. of standard deviation in gps time
                     thread { mpNoise.start() }

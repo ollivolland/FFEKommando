@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId "com.ollivolland.ffekommando"
-        minSdk 23
+        minSdk 22
         targetSdk 32
         versionCode 5
         versionName "2022-06-22E"
@@ -55,8 +55,7 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'com.google.android.material:material:1.6.1'
-    implementation 'com.google.android.exoplayer:exoplayer:2.18.0'
-    implementation 'com.github.wseemann:FFmpegMediaMetadataRetriever:1.0.14'
+    implementation 'com.google.android.gms:play-services-location:20.0.0'
 
 // CameraX
     def camerax_version = "1.1.0-rc02"
