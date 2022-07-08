@@ -1,4 +1,4 @@
-package com.ollivolland.ffekommando
+package com.ollivolland.ffekommando.ui
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.ollivolland.ffekommando.*
 import java.util.*
 
 class ActivityController : AppCompatActivity() {
@@ -177,7 +178,7 @@ class ActivityController : AppCompatActivity() {
             }
 
             isMaster = true
-            this.myId = myId
+            Companion.myId = myId
 
             isExists = true
             context.startActivity(Intent(context, ActivityController::class.java))
@@ -190,8 +191,8 @@ class ActivityController : AppCompatActivity() {
             }
 
             isMaster = false
-            this.myId = myId
-            this.masterId = masterId
+            Companion.myId = myId
+            Companion.masterId = masterId
 
             isExists = true
             context.startActivity(Intent(context, ActivityController::class.java))

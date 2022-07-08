@@ -1,4 +1,4 @@
-package com.ollivolland.ffekommando
+package com.ollivolland.ffekommando.ui
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.view.PreviewView
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
+import com.ollivolland.ffekommando.*
 import org.jcodec.containers.mp4.boxes.MetaValue
 import org.jcodec.movtool.MetadataEditor
 import org.json.JSONObject
@@ -32,24 +33,29 @@ class ActivityCamera : AppCompatActivity() {
     private var fileName = ""; var path = ""
     private lateinit var threadCamera:Thread
     private lateinit var threadCommand:Thread
-    private lateinit var cameraInstance:CameraInstance
+    private lateinit var cameraInstance: CameraInstance
     private lateinit var timerSynchronized: MyTimer
-    private var myCommandObserver:MyCommand? = null
+    private var myCommandObserver: MyCommand? = null
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
 
-        timerSynchronized = ActivityCamera.timerSynchronized!!
+        timerSynchronized = Companion.timerSynchronized!!
         cameraInstance = nextInstance!!
-        fileName = "VID_${Globals.formatToSeconds.format(Date(cameraInstance.correctedTimeStartCamera))}_${Globals.getDeviceId(this)}.mp4"
+        fileName = "VID_${Globals.formatToSeconds.format(Date(cameraInstance.correctedTimeStartCamera))}_${
+            Globals.getDeviceId(
+                this
+            )
+        }.mp4"
         val dir = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).absolutePath}/Camera"
         if(!File(dir).exists()) File(dir).mkdirs()
         path = "$dir/$fileName"
 
         vCameraSurface = findViewById(R.id.start_sCameraView)
         val tText:TextView = findViewById(R.id.camera_tText)
+        val vLine:View = findViewById(R.id.start_vLine)
         bStop = findViewById(R.id.start_bStop)
 
         bStop.isEnabled = false
@@ -59,7 +65,9 @@ class ActivityCamera : AppCompatActivity() {
         threadCamera = Thread {
             try {
                 //  Init
-                camera = MyCameraCameraX(this, vCameraSurface, path, intent.extras!!.getInt(VIDEO_PROFILE), timerSynchronized)
+                camera = MyCameraCameraX(this, vCameraSurface, path, intent.extras!!.getInt(
+                    VIDEO_PROFILE
+                ), timerSynchronized)
 //                camera = MyCameraMediaRecorder(path, vCameraSurface, this, timerSynchronized)
                 //wait & do
                 timerSynchronized.sleepUntil(cameraInstance.correctedTimeStartCamera)
@@ -85,7 +93,7 @@ class ActivityCamera : AppCompatActivity() {
 
         //  Command
         threadCommand = Thread {
-            var commandWrapper:MyCommand? = null
+            var commandWrapper: MyCommand? = null
             try {
                 //  prepare
                 commandWrapper = MyCommand[cameraInstance.commandFullName, this]
@@ -101,6 +109,8 @@ class ActivityCamera : AppCompatActivity() {
                 commandWrapper?.stopAndRelease()
             }
         }
+
+        if(cameraInstance.isAnalyze) vLine.visibility = View.VISIBLE
 
         if(cameraInstance.isCamera) vCameraSurface.visibility = View.VISIBLE
         else tText.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
@@ -203,15 +213,15 @@ class ActivityCamera : AppCompatActivity() {
 
     companion object {
         private const val VIDEO_PROFILE = "videoProfile"
-        var nextInstance:CameraInstance? = null
-        var timerSynchronized:MyTimer? = null
+        var nextInstance: CameraInstance? = null
+        var timerSynchronized: MyTimer? = null
         var lambda: (String) -> Unit = {}
 
         fun startCamera(activity:Activity, config: CameraInstance, timerSynchronized: MyTimer, lambda: (String) -> Unit)
         {
             nextInstance = config
-            this.timerSynchronized = timerSynchronized
-            this.lambda = lambda
+            Companion.timerSynchronized = timerSynchronized
+            Companion.lambda = lambda
 
             activity.startActivity(Intent(activity, ActivityCamera::class.java).apply {
                 putExtra(VIDEO_PROFILE, CamcorderProfile.QUALITY_1080P)

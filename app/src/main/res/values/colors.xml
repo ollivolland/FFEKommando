@@ -10,4 +10,5 @@
     <color name="transparent">#00000000</color>
     <color name="background">#333333</color>
     <color name="background_card">#FFFFFF</color>
+    <color name="green">#00ff00</color>
 </resources>

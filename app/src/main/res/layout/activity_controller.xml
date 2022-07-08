@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:keepScreenOn="true"
     android:background="@color/background"
-    tools:context=".ActivityController">
+    tools:context=".ui.ActivityController">
 
     <LinearLayout android:id="@+id/controller_lParent"
         android:layout_width="match_parent"
@@ -38,14 +38,14 @@
                 >
 
                 <Button android:id="@+id/controller_bStart"
-                    android:layout_width="150dp"
-                    android:layout_height="50dp"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
                     android:text="Start"
                     />
 
                 <Button android:id="@+id/controller_bSchedule"
-                    android:layout_width="150dp"
-                    android:layout_height="50dp"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
                     android:layout_marginStart="100dp"
                     android:text="Schedule"
                     />

@@ -89,7 +89,7 @@ abstract class MyCommand(activity: Activity) {
 
             return object : MyCommand(activity) {
                 val mps: Array<MediaPlayer> = listRawIds.map { x -> MediaPlayer.create(activity, x) }.toTypedArray()
-                val mpNoise = MediaPlayer.create(activity, R.raw.whitenoise_point_01db)
+                val mpNoise = MediaPlayer.create(activity, R.raw.whitenoise_point_001db)
 
                 override val time: Long = executionDelay
                 override val name: String = "$buildName&${listDelayFromStart.joinToString(separator = "&")}"

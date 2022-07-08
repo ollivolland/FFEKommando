@@ -1,11 +1,10 @@
-package com.ollivolland.ffekommando
+package com.ollivolland.ffekommando.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.content.IntentSender
 import android.content.IntentSender.SendIntentException
 import android.content.pm.PackageManager
 import android.location.Location
@@ -18,11 +17,11 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.common.api.GoogleApiClient
-import com.google.android.gms.common.api.PendingResult
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.material.switchmaterial.SwitchMaterial
+import com.ollivolland.ffekommando.*
+import com.ollivolland.ffekommando.R
 import java.text.SimpleDateFormat
 
 
@@ -163,7 +162,7 @@ class ActivityMain: AppCompatActivity()
 
     private fun startMaster()
     {
-        val timerSynchronized = ActivityMain.timerSynchronized
+        val timerSynchronized = timerSynchronized
 
         db["masters/$androidIdd",
             { task ->
@@ -221,16 +220,20 @@ class ActivityMain: AppCompatActivity()
         val locationRequest = LocationRequest.create().setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY).setInterval(100).setFastestInterval(100)
         val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest).setAlwaysShow(true)
         val client: SettingsClient = LocationServices.getSettingsClient(this)
-        val result = client.checkLocationSettings(builder.build())
-        result.addOnFailureListener { exception ->
-            if (exception is ResolvableApiException) {
-                try {
-                    exception.startResolutionForResult(this, 1000)
-                } catch (sendEx: SendIntentException) {
-                    startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-                }
-            } else startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-        }
+
+        client.checkLocationSettings(builder.build())
+            .addOnSuccessListener {
+                Toast.makeText(this, "Gps is enabled", Toast.LENGTH_LONG).show()
+            }
+            .addOnFailureListener { exception ->
+                if (exception is ResolvableApiException) {
+                    try {
+                        exception.startResolutionForResult(this, 1000)
+                    } catch (sendEx: SendIntentException) {
+                        startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                    }
+                } else startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            }
     }
 
     private val versionName:String get() = applicationContext.packageManager.getPackageInfo(applicationContext.packageName, 0).versionName
@@ -239,6 +242,6 @@ class ActivityMain: AppCompatActivity()
         private val delayList:MutableList<Long> = mutableListOf()
         var delay:Long = 0
         var delayStdDev:Double = 0.0
-        val timerSynchronized:MyTimer get() = MyTimer(delay)
+        val timerSynchronized: MyTimer get() = MyTimer(delay)
     }
 }

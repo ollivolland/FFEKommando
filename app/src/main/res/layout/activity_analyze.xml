@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ActivityAnalyze">
+    tools:context=".ui.ActivityAnalyze">
 
     <LinearLayout   android:id="@+id/analyze_lParent"
         android:layout_width="match_parent"
@@ -13,11 +13,6 @@
         android:orientation="vertical">
 
         <TextView   android:id="@+id/analyze_tText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            />
-
-        <TextView   android:id="@+id/analyze_tText2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             />

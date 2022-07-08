@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ActivityCamera"
+    tools:context=".ui.ActivityCamera"
     android:keepScreenOn="true"
     >
 
@@ -14,6 +14,14 @@
         android:layout_height="match_parent"
         android:visibility="gone"
         android:layout_centerInParent="true"
+        />
+
+    <View   android:id="@+id/start_vLine"
+        android:layout_width="4px"
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"
+        android:background="@color/green"
+        android:visibility="gone"
         />
 
     <RelativeLayout

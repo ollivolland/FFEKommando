@@ -1,7 +1,6 @@
 package com.ollivolland.ffekommando
 
 import android.app.Activity
-import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.os.Build
 import android.view.View
@@ -21,6 +20,7 @@ class ViewInstance(private val activity:Activity, private val vInstanceParent:Vi
     val vParent:LinearLayout
     val vViewText:TextView
     val vExit:Button
+    val lines = mutableListOf<String>()
 
     init {
         container = activity.layoutInflater.inflate(R.layout.view_instance, vInstanceParent, false)
@@ -40,40 +40,55 @@ class ViewInstance(private val activity:Activity, private val vInstanceParent:Vi
     fun update(path:String, config: CameraInstance) {
         if(!isExists) return
 
-        vViewText.text = "[done] started at ${Globals.formatToTimeOfDay.format(Date(config.correctedTimeStartCamera))}"
+        lines.add("[done] started at ${Globals.formatToTimeOfDay.format(Date(config.correctedTimeStartCamera))}")
+        if(config.isAnalyze) lines.add("will analyze shortly")
+        activity.runOnUiThread { vViewText.text = lines.joinToString("\n") }
 
-        if(config.isAnalyze) thread {
+        if(!config.isAnalyze) return
+
+        thread(name = "analyzer thread") {
             try {
-            ActivityAnalyze.analyze(path, { interests ->
-                //  Display
-                interests.forEach { interest ->
-                    if(Build.VERSION.SDK_INT < 28) return@forEach
+                val extractor = MyMediaExtractor(path)
+                val startTimeMs = Analyzer.getTimeToStartMs(path)
 
-                    val timeOfFrame = ActivityAnalyze.getTimesOfFramesMillis(path)
-                    val timeToStart = ActivityAnalyze.getTimeToStartMillis(path)
-                    val mediaMetadataRetriever = MediaMetadataRetriever()
-                    mediaMetadataRetriever.setDataSource(path)
+                Analyzer.analyze(extractor, { interests ->
+                    interests.forEach { interest ->
+                        val bitmap = extractor.frame(interest.best)
+                        var inflatedView: View? = null
+                        var image: ImageView? = null
+                        var text: TextView? = null
+                        var isInit = false
 
-                    activity.runOnUiThread {
-                        val inflatedView: View = View.inflate(activity, R.layout.view_image, null)
-                        val image = inflatedView.findViewById<ImageView>(R.id.image_iImage)
-                        val image2 = inflatedView.findViewById<ImageView>(R.id.image_iImage2)
-                        val text = inflatedView.findViewById<TextView>(R.id.image_tText)
-                        image.setImageBitmap(mediaMetadataRetriever.getFrameAtIndex(interest.best)!!)
+                        activity.runOnUiThread {
+                            inflatedView = View.inflate(activity, R.layout.view_image, null)
+                            image = inflatedView!!.findViewById(R.id.image_iImage)
+                            text = inflatedView!!.findViewById(R.id.image_tText)
 
-                        thread {
-                            val static = ActivityAnalyze.getDifferenceBitmap(mediaMetadataRetriever, interest.best) { times ->
-                                val triangulated = timeOfFrame[interest.best]!! + times * (timeOfFrame[interest.best]!! - timeOfFrame[interest.best - 1]!!) - timeToStart
-                                activity.runOnUiThread { text.text = text.text.toString() + "\ntriangulated = ${"%.3f".format(triangulated * 0.001)} s" }
-                            }
-                            activity.runOnUiThread { image2.setImageBitmap(static) }
+                            image!!.setImageBitmap(bitmap)
+                            val textFrameTime = "frame time = ${"%.3f".format((extractor.frameToMs[interest.best]!! - startTimeMs) * 0.001)} s"
+                            text!!.text = textFrameTime
+                            vParent.addView(inflatedView)
+
+                            isInit = true
                         }
-                        text.text = "frame time = ${"%.3f".format((timeOfFrame[interest.best]!! - timeToStart) * 0.001)} s"
 
-                        vParent.addView(inflatedView)
+                        while (!isInit) Thread.sleep(10)
+
+                        val (static, timeTriangulatedMs) = Analyzer.getDifferenceBitmap(extractor, interest.best)
+                        activity.runOnUiThread {
+                            val textTriangulated = "\ntriangulated = ${"%.3f".format((timeTriangulatedMs - startTimeMs) * 0.001)} s"
+
+                            text!!.text = text!!.text.toString() + textTriangulated
+                            image!!.setImageBitmap(static)
+                        }
+
                     }
-                }
-            })
+                }, {
+                    lines[1] = it
+                    activity.runOnUiThread { vViewText.text = lines.joinToString("\n") }
+                })
+
+                extractor.release()
             } catch (e:Exception) {}
         }
     }

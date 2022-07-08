@@ -20,10 +20,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FFEKommando">
         <activity
-            android:name=".ActivityAnalyze"
+            android:name=".ui.ActivityAnalyze"
             android:exported="false" />
         <activity
-            android:name=".ActivityMain"
+            android:name=".ui.ActivityMain"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -33,12 +33,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ActivityController"
+            android:name=".ui.ActivityController"
             android:exported="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.FFEKommando.SemiFullscreen" />
         <activity
-            android:name=".ActivityCamera"
+            android:name=".ui.ActivityCamera"
             android:exported="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.FFEKommando.Fullscreen" />
