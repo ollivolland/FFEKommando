@@ -4,12 +4,14 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.ollivolland.ffekommando.*
 import java.util.*
+import kotlin.concurrent.thread
 
 class ActivityController : AppCompatActivity() {
     lateinit var wakeLock: WakeLock
@@ -19,6 +21,7 @@ class ActivityController : AppCompatActivity() {
     private val listPlannedCameraStarts = mutableListOf<CameraInstance>()
     private val mapCameraInstanceToView = mutableMapOf<CameraInstance, ViewInstance>()
     private lateinit var vParent:LinearLayout
+    private val listSlaves = mutableMapOf<String, Long>()
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,7 +36,7 @@ class ActivityController : AppCompatActivity() {
         val bSchedule:Button = findViewById(R.id.controller_bSchedule)
         val vMaster:LinearLayout = findViewById(R.id.controller_lMaster)
         vParent = findViewById(R.id.controller_lParent)
-        text = "myId: $myId\nmasterId: $masterId\nisMaster: $isMaster"
+        text = if(isMaster) "master ($myId)" else "slave ($myId)\nmaster id: $masterId"
 
         if(isMaster) {
             vMaster.visibility = View.VISIBLE
@@ -50,41 +53,45 @@ class ActivityController : AppCompatActivity() {
                     "command" to withConfig.commandFullName
                 )
 
-//                Thread {
-//                    timerSynchronized.sleepUntil(withConfig.correctedTimeCommandExecuted)
-//                    db - "/masters/$myId/sessions/$timeStartCamera"
-//                }.start()
-
                 registerStartCamera(withConfig)
             }
 
-            bSchedule.setOnClickListener {
-                val viewDialog = layoutInflater.inflate(R.layout.view_schedule, null)
-                val vTimePicker = viewDialog.findViewById<TimePicker>(R.id.schedule_vTimePicker)
+            if (Build.VERSION.SDK_INT >= 23)
+                bSchedule.setOnClickListener {
+                    val viewDialog = layoutInflater.inflate(R.layout.view_schedule, null)
+                    val vTimePicker = viewDialog.findViewById<TimePicker>(R.id.schedule_vTimePicker)
 
-                vTimePicker.setIs24HourView(true)
-                AlertDialog.Builder(this)
-                    .setView(viewDialog)
-                    .setPositiveButton("ok") { a, _ ->
-                        val calendar = Calendar.getInstance()
-                        calendar.time = Date()
-                        calendar[Calendar.HOUR_OF_DAY] = vTimePicker.hour
-                        calendar[Calendar.MINUTE] = vTimePicker.minute
-                        calendar[Calendar.SECOND] = 0
+                    vTimePicker.setIs24HourView(true)
+                    AlertDialog.Builder(this)
+                        .setView(viewDialog)
+                        .setPositiveButton("ok") { a, _ ->
+                            val calendar = Calendar.getInstance()
+                            calendar.time = Date()
+                            calendar[Calendar.HOUR_OF_DAY] = vTimePicker.hour
+                            calendar[Calendar.MINUTE] = vTimePicker.minute
+                            calendar[Calendar.SECOND] = 0
 
-                        val withConfig = DefaultCameraConfig.default.generateInstance(this, calendar.timeInMillis)
+                            val withConfig = DefaultCameraConfig.default.generateInstance(this, calendar.timeInMillis)
 
-                        db["masters/$myId/sessions/${calendar.timeInMillis}"] = hashMapOf(
-                            "correctedTimeCameraStart" to withConfig.correctedTimeStartCamera,
-                            "correctedTimeCommandExecuted" to withConfig.correctedTimeCommandExecuted,
-                            "millisVideoLength" to withConfig.millisVideoLength,
-                            "command" to withConfig.commandFullName
-                        )
+                            db["masters/$myId/sessions/${calendar.timeInMillis}"] = hashMapOf(
+                                "correctedTimeCameraStart" to withConfig.correctedTimeStartCamera,
+                                "correctedTimeCommandExecuted" to withConfig.correctedTimeCommandExecuted,
+                                "millisVideoLength" to withConfig.millisVideoLength,
+                                "command" to withConfig.commandFullName
+                            )
 
-                        registerStartCamera(withConfig)
-                        a.dismiss()
-                    }
-                    .show()
+                            registerStartCamera(withConfig)
+                            a.dismiss()
+                        }
+                        .show()
+                }
+            else bSchedule.isEnabled = false
+
+            //  connection info
+            db.listen("masters/$myId/slavesLastActive") { dataSnapshot ->
+                dataSnapshot.children.forEach {
+                    listSlaves[it.key!!] = it.value as Long
+                }
             }
         } else {
             db.listen("masters/$masterId/sessions") { dataSnapshot ->
@@ -111,19 +118,25 @@ class ActivityController : AppCompatActivity() {
         }
 
         //  UI Loop
-        Thread {
+        thread {
             while (!this.isDestroyed)
             {
                 val time = ActivityMain.timerSynchronized.time
 
                 runOnUiThread {
                     try {
-                        tText.text = text +
-                                "\n\ndelay to GPS satellite = ${
-                                    ActivityMain.delay
-                                } ms" +
-                                " ± ${ActivityMain.delayStdDev.format(2)} ms\n" +
-                                "time = ${Globals.formatToTimeOfDay.format(Date(time))}"
+                        var newText = "\n\ndelay to GPS satellite = ${ActivityMain.delay} ms\n" +
+                            "time = ${Globals.formatToTimeOfDay.format(Date(time))}" +
+                            "   (± ${ActivityMain.delayStdDev.format(0)} ms)"
+
+                        if(isMaster) {
+                            val filtered = listSlaves.filter {  it.value > time - 5_000L }.toList()
+
+                            newText += "\n\n${filtered.count()} connected devices"
+                            if(filtered.isNotEmpty()) newText += "\n{\t${filtered.joinToString { "\n\t${it.first}" }.removePrefix("\n\t")} }"
+                        }
+
+                        tText.text = text + newText
                     } catch (e:Exception) {}
                 }
 
@@ -132,13 +145,23 @@ class ActivityController : AppCompatActivity() {
 
                 Thread.sleep(50)
             }
-        }.start()
+        }
+
+        //  Connection info loop
+        thread {
+            while (!this.isDestroyed) {
+                if(isMaster) db["masters/$myId/lastActive"] = ActivityMain.timerSynchronized.time
+                else db["masters/$masterId/slavesLastActive/$myId"]= ActivityMain.timerSynchronized.time
+
+                Thread.sleep(1000)
+            }
+
+            if(isMaster) db - "masters/$masterId"
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-
-        if(isMaster) db - "masters/$masterId"
 
         wakeLock.release()
         isExists = false

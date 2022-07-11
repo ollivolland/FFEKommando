@@ -17,11 +17,6 @@
             android:layout_height="wrap_content"
             />
 
-        <ImageView android:id="@+id/analyze_iImage"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            />
-
     </LinearLayout>
 
 </ScrollView>

@@ -45,7 +45,7 @@ class ActivityMain: AppCompatActivity()
 
             if (isFirstLocation) isFirstLocation = false
             else delayList.add(thisDelay)
-            if (delayList.count() > 120) delayList.removeAt(0)
+            if (delayList.count() > 300) delayList.removeAt(0)
 
             Log.v(
                 "LOCATION",
@@ -162,16 +162,13 @@ class ActivityMain: AppCompatActivity()
 
     private fun startMaster()
     {
-        val timerSynchronized = timerSynchronized
-
         db["masters/$androidIdd",
             { task ->
                 if(task.isSuccessful) ActivityController.launchMaster(this, androidIdd)
                 else Toast.makeText(this, "failure", Toast.LENGTH_LONG).show()
             }
         ] = hashMapOf(
-            "isActive" to true,
-            "activeSince" to timerSynchronized.time
+            "isActive" to true
         )
     }
 
