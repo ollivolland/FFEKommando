@@ -4,12 +4,17 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.PackageManager
+import android.hardware.camera2.CaptureRequest
 import android.os.SystemClock
+import android.util.Range
 import android.widget.Toast
+import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.*
+import androidx.camera.core.impl.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
 import androidx.camera.video.VideoCapture
+import androidx.camera.video.impl.VideoCaptureConfig
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -54,9 +59,11 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
         }
 
         isHasCaptured = true
-//        videoCapture.camera?.cameraControl?.setLinearZoom(0.5f)
 
-        recording = videoCapture.output.prepareRecording(activity, FileOutputOptions.Builder(File(path)).build()).start(executor) {
+        recording = videoCapture.output
+            .prepareRecording(activity, FileOutputOptions.Builder(File(path)).build())
+            .withAudioEnabled()
+            .start(executor) {
             when (it) {
                 is VideoRecordEvent.Start -> {
                     log += "VIDEO START ${SystemClock.uptimeMillis()}000"
@@ -89,7 +96,7 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
         while (!isVideoSaved) Thread.sleep(10)
     }
 
-    @SuppressLint("RestrictedApi")
+    @SuppressLint("RestrictedApi", "UnsafeOptInUsageError")
     private fun create() {
         cameraProvider.unbindAll()
 
