@@ -12,6 +12,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
 import android.view.View
@@ -34,27 +35,28 @@ class ActivityMain: AppCompatActivity()
     lateinit var sCamera:SwitchMaterial
     lateinit var sCommand:SwitchMaterial
     lateinit var sAnalyze:SwitchMaterial
+    lateinit var sTest:SwitchMaterial
     lateinit var db: MyDB
     lateinit var locationManager:LocationManager
     private val locationListener = object : LocationListener {
         @SuppressLint("SimpleDateFormat")
         override fun onLocationChanged(location: Location) {
             val time = SimpleDateFormat("dd/MM/yyyy HH:mm:ss.SSS").format(location.time)
-            val millisSinceReceived = (android.os.SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1_000_000L
-            val thisDelay = (location.time + millisSinceReceived) - System.currentTimeMillis()
+            val millisSinceReceived = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1_000_000L
+            val thisTimeToBoot = (location.time + millisSinceReceived) - SystemClock.elapsedRealtime()
 
             if (isFirstLocation) isFirstLocation = false
-            else delayList.add(thisDelay)
-            if (delayList.count() > 300) delayList.removeAt(0)
+            else timeToBootList.add(thisTimeToBoot)
+            if (timeToBootList.count() > 300) timeToBootList.removeAt(0)
 
             Log.v(
                 "LOCATION",
-                "Time GPS: $time, delay = $thisDelay (${location.provider}) => $delay" +
-                        ", stdev = ${delayList.stdev().format(2)}"
+                "Time GPS: $time, delay = $thisTimeToBoot (${location.provider}) => $timeToBoot" +
+                        ", stdev = ${timeToBootList.stdev().format(2)}"
             )
 
-            delay = if(delayList.isEmpty()) 0 else delayList.mean().toLong()
-            delayStdDev = if(delayList.isEmpty()) 0.0 else delayList.stdev()
+            timeToBoot = if(timeToBootList.isEmpty()) 0 else timeToBootList.mean().toLong()
+            timeToBootStdDev = if(timeToBootList.isEmpty()) 0.0 else timeToBootList.stdev()
         }
 
         override fun onProviderEnabled(provider: String) {}
@@ -91,6 +93,7 @@ class ActivityMain: AppCompatActivity()
         sCamera = findViewById(R.id.main_sCamera)
         sCommand = findViewById(R.id.main_sCommand)
         sAnalyze = findViewById(R.id.main_sAnalyze)
+        sTest = findViewById(R.id.main_sTest)
         val vSpinnerCommand = findViewById<Spinner>(R.id.spinnerCommand)
         val vSpinnerDuration = findViewById<Spinner>(R.id.spinnerDuration)
         val vSpinnerDelay = findViewById<Spinner>(R.id.spinnerDelay)
@@ -99,12 +102,10 @@ class ActivityMain: AppCompatActivity()
         bMaster.setOnClickListener { startMaster() }
         bSlave.setOnClickListener { startSlave() }
         bAnalyze.setOnClickListener { startActivity(Intent(this, ActivityAnalyze::class.java)) }
-        DefaultCameraConfig.default.isCamera = sCamera.isChecked
         sCamera.setOnClickListener { DefaultCameraConfig.default.isCamera = sCamera.isChecked }
-        DefaultCameraConfig.default.isCommand = sCommand.isChecked
         sCommand.setOnClickListener { DefaultCameraConfig.default.isCommand = sCommand.isChecked }
-        DefaultCameraConfig.default.isAnalyze = sAnalyze.isChecked
         sAnalyze.setOnClickListener { DefaultCameraConfig.default.isAnalyze = sAnalyze.isChecked }
+        sTest.setOnClickListener { DefaultCameraConfig.default.isTest = sTest.isChecked }
 
         tText.append("version = $versionName")
 
@@ -199,8 +200,7 @@ class ActivityMain: AppCompatActivity()
 
     private fun initialiseLocationListener() {
         //  Check for permission
-        if (Build.VERSION.SDK_INT > 22 && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-        ) {
+        if (Build.VERSION.SDK_INT > 22 && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.e("LOCATION", "Incorrect 'uses-permission', requires 'ACCESS_FINE_LOCATION'")
             return
         }
@@ -236,9 +236,9 @@ class ActivityMain: AppCompatActivity()
     private val versionName:String get() = applicationContext.packageManager.getPackageInfo(applicationContext.packageName, 0).versionName
 
     companion object {
-        private val delayList:MutableList<Long> = mutableListOf()
-        var delay:Long = 0
-        var delayStdDev:Double = 0.0
-        val timerSynchronized: MyTimer get() = MyTimer(delay)
+        private val timeToBootList:MutableList<Long> = mutableListOf()
+        private var timeToBoot:Long = 0
+        var timeToBootStdDev:Double = 0.0; private set;
+        val timerSynchronized: MyTimer get() = MyTimer(timeToBoot)
     }
 }

@@ -102,7 +102,7 @@ class Analyzer {
             return Pair(percentBroken.indexOfFirst { p -> p >= broken }, percentBroken.indexOfLast { p -> p >= broken })
         }
 
-        private fun percentBroken(frameCurrent: Bitmap, frameLast: Bitmap, posX:Int):Double {
+        fun percentBroken(frameCurrent: Bitmap, frameLast: Bitmap, posX:Int):Double {
             return (0 until frameCurrent.height).count { y ->
                 isBroken(frameCurrent[posX, y], frameLast[posX, y])
             }.toDouble() / frameCurrent.height

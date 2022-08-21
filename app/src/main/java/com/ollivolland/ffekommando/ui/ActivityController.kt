@@ -106,6 +106,7 @@ class ActivityController : AppCompatActivity() {
                         isCamera = DefaultCameraConfig.default.isCamera,
                         isCommand = DefaultCameraConfig.default.isCommand,
                         isAnalyze = DefaultCameraConfig.default.isAnalyze,
+                        isTest = DefaultCameraConfig.default.isTest,
                         commandFullName = command,
                         correctedTimeStartCamera = timeStartCamera,
                         correctedTimeCommandExecuted = child.child("correctedTimeCommandExecuted").value as Long,
@@ -119,15 +120,14 @@ class ActivityController : AppCompatActivity() {
 
         //  UI Loop
         thread {
-            while (!this.isDestroyed)
-            {
+            while (!this.isDestroyed) {
                 val time = ActivityMain.timerSynchronized.time
 
                 runOnUiThread {
                     try {
-                        var newText = "\n\ndelay to GPS satellite = ${ActivityMain.delay} ms\n" +
+                        var newText = "\n\ndelay to GPS time = ${ActivityMain.timerSynchronized.time - System.currentTimeMillis()} ms\n" +
                             "time = ${Globals.formatToTimeOfDay.format(Date(time))}" +
-                            "   (± ${ActivityMain.delayStdDev.format(0)} ms)"
+                            "   (± ${ActivityMain.timeToBootStdDev.format(0)} ms)"
 
                         if(isMaster) {
                             val filtered = listSlaves.filter {  it.value > time - 5_000L }.toList()

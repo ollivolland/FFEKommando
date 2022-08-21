@@ -15,7 +15,7 @@ android {
         minSdk 22
         targetSdk 32
         versionCode 5
-        versionName "2022-07-08E"
+        versionName "2022-07-25E"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {

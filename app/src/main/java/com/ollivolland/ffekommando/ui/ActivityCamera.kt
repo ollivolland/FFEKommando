@@ -3,10 +3,13 @@ package com.ollivolland.ffekommando.ui
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
 import android.media.CamcorderProfile
 import android.os.Bundle
 import android.os.Environment
+import android.os.SystemClock
 import android.util.Log
+import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
@@ -16,11 +19,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.view.PreviewView
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
+import com.ollivolland.camera2.YuvToRgbConverter
 import com.ollivolland.ffekommando.*
 import org.jcodec.containers.mp4.boxes.MetaValue
 import org.jcodec.movtool.MetadataEditor
 import org.json.JSONObject
 import java.io.File
+import java.io.FileOutputStream
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -29,10 +34,11 @@ class ActivityCamera : AppCompatActivity() {
     private var camera: MyCamera? = null
     private lateinit var bStop: ImageButton
     private lateinit var vCameraSurface:PreviewView
-//    private lateinit var vCameraSurface:SurfaceView
+    private lateinit var vTexture:TextureView
     private var fileName = ""; var path = ""
     private lateinit var threadCamera:Thread
     private lateinit var threadCommand:Thread
+    private lateinit var threadStreamer:Thread
     private lateinit var cameraInstance: CameraInstance
     private lateinit var timerSynchronized: MyTimer
     private var myCommandObserver: MyCommand? = null
@@ -54,12 +60,62 @@ class ActivityCamera : AppCompatActivity() {
         path = "$dir/$fileName"
 
         vCameraSurface = findViewById(R.id.start_sCameraView)
+        vTexture = findViewById(R.id.start_sTextureView)
         val tText:TextView = findViewById(R.id.camera_tText)
         val vLine:View = findViewById(R.id.start_vLine)
         bStop = findViewById(R.id.start_bStop)
 
         bStop.isEnabled = false
         bStop.setOnClickListener { stop("click") }
+
+        //  Streamer
+        threadStreamer = Thread {
+            val myStreamer = MyStreamer(this, vTexture)
+            val yuvToRgbConverter = YuvToRgbConverter(this)
+            var lastBitmap:Bitmap = Bitmap.createBitmap(myStreamer.PREVIEW_WIDTH, myStreamer.PREVIEW_HEIGHT, Bitmap.Config.ARGB_8888)
+            var newBitmap:Bitmap = Bitmap.createBitmap(myStreamer.PREVIEW_WIDTH, myStreamer.PREVIEW_HEIGHT, Bitmap.Config.ARGB_8888)
+            var frameNum = 0
+            try {
+
+                myStreamer.apply {
+                    prepare()
+                    startAt(cameraInstance.correctedTimeStartCamera)
+                    withImage {
+                        val image = it.acquireLatestImage() ?: return@withImage
+
+                        log += "image available from ${image.timestamp}, ${SystemClock.elapsedRealtimeNanos()}"
+
+                        yuvToRgbConverter.yuvToRgb(image, newBitmap)
+
+                        if(frameNum > 0 && Analyzer.percentBroken(newBitmap, lastBitmap, (myStreamer.PREVIEW_WIDTH * 0.5).toInt()) > Analyzer.MIN_LINE_BROKEN_FOR_REGISTER) {
+                            thread {
+                                val file =
+                                    File("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)}/broken/${image.timestamp}.png")
+                                file.createNewFile()
+                                FileOutputStream(file).use { out ->
+                                    newBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                                    out.flush()
+                                }
+                            }
+                        }
+
+                        lastBitmap = newBitmap
+                        image.close()
+                        frameNum++
+                    }
+                }
+            } catch (e: InterruptedException) {
+                myStreamer.apply {
+                    stop()
+                    destroy()
+                }
+            } catch (e: Exception) {
+                Firebase.crashlytics.recordException(e)
+            } finally {
+                lastBitmap.recycle()
+                newBitmap.recycle()
+            }
+        }
 
         //  Camera
         threadCamera = Thread {
@@ -110,6 +166,8 @@ class ActivityCamera : AppCompatActivity() {
             }
         }
 
+        if(cameraInstance.isTest) vTexture.visibility = View.VISIBLE
+
         if(cameraInstance.isAnalyze) vLine.visibility = View.VISIBLE
 
         if(cameraInstance.isCamera) vCameraSurface.visibility = View.VISIBLE
@@ -131,19 +189,13 @@ class ActivityCamera : AppCompatActivity() {
     private fun start() {
         if(cameraInstance.isCommand) threadCommand.start()
         if(cameraInstance.isCamera) threadCamera.start()
+        if(cameraInstance.isTest) threadStreamer.start()    //  TODO
 
         //  stopper thread
         thread {
             timerSynchronized.sleepUntil(cameraInstance.correctedTimeCommandExecuted + cameraInstance.millisVideoLength)
             stop("stopper thread")
         }
-
-        //flashlight
-//        thread {
-//            CameraH.switchFlashLight(this, true)
-//            Thread.sleep(100)
-//            CameraH.switchFlashLight(this, false)
-//        }
 
         //  Stop button
         bStop.isEnabled = true
@@ -161,6 +213,7 @@ class ActivityCamera : AppCompatActivity() {
 
         threadCamera.interrupt()
         threadCommand.interrupt()
+        threadStreamer.interrupt()
 
         finish()
     }
