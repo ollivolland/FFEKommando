@@ -50,7 +50,7 @@ class ActivityCamera : AppCompatActivity() {
 
         timerSynchronized = Companion.timerSynchronized!!
         cameraInstance = nextInstance!!
-        fileName = "VID_${Globals.formatToSeconds.format(Date(cameraInstance.correctedTimeStartCamera))}_${
+        fileName = "VID_${Globals.formatDayToSeconds.format(Date(cameraInstance.correctedTimeStartCamera))}_${
             Globals.getDeviceId(
                 this
             )
@@ -228,16 +228,16 @@ class ActivityCamera : AppCompatActivity() {
             val json = JSONObject()
 
             json.put("dateVideoStart",
-                Globals.formatToMillis.format(Date(camera!!.timeSynchronizedStartedRecording)))
+                Globals.formatDayToMillis.format(Date(camera!!.timeSynchronizedStartedRecording)))
 
             json.put("dateCommand",
-                Globals.formatToMillis.format(cameraInstance.correctedTimeCommandExecuted))
+                Globals.formatDayToMillis.format(cameraInstance.correctedTimeCommandExecuted))
 
             if(myCommandObserver != null)
             {
                 val lag = myCommandObserver!!.observedCommandLag
                 json.put("dateCommandWithLag",
-                    Globals.formatToMillis.format(cameraInstance.correctedTimeCommandExecuted + lag))
+                    Globals.formatDayToMillis.format(cameraInstance.correctedTimeCommandExecuted + lag))
                 json.put("lagMs", lag)
 
                 meta["com.apple.quicktime.album"] =

@@ -1,8 +1,6 @@
 package com.ollivolland.ffekommando
 
 import android.app.Activity
-import android.media.MediaMetadataRetriever
-import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -40,7 +38,7 @@ class ViewInstance(private val activity:Activity, private val vInstanceParent:Vi
     fun update(path:String, config: CameraInstance) {
         if(!isExists) return
 
-        lines.add("[done] started at ${Globals.formatToTimeOfDay.format(Date(config.correctedTimeStartCamera))}")
+        lines.add("[done] started at ${Globals.formatTimeToSeconds.format(Date(config.correctedTimeStartCamera))}")
         if(config.isAnalyze) lines.add("will analyze shortly")
         activity.runOnUiThread { vViewText.text = lines.joinToString("\n") }
 

@@ -1,7 +1,6 @@
 package com.ollivolland.ffekommando.ui
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -23,11 +22,9 @@ import com.google.android.gms.location.*
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.ollivolland.ffekommando.*
 import com.ollivolland.ffekommando.R
-import java.text.SimpleDateFormat
 
 
-class ActivityMain: AppCompatActivity()
-{
+class ActivityMain: AppCompatActivity() {
     var isFirstLocation = true
     lateinit var androidIdd:String
     lateinit var bMaster:Button
@@ -38,12 +35,10 @@ class ActivityMain: AppCompatActivity()
     lateinit var sTest:SwitchMaterial
     lateinit var db: MyDB
     lateinit var locationManager:LocationManager
+
     private val locationListener = object : LocationListener {
-        @SuppressLint("SimpleDateFormat")
         override fun onLocationChanged(location: Location) {
-            val time = SimpleDateFormat("dd/MM/yyyy HH:mm:ss.SSS").format(location.time)
-            val millisSinceReceived = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1_000_000L
-            val thisTimeToBoot = (location.time + millisSinceReceived) - SystemClock.elapsedRealtime()
+            val thisTimeToBoot = location.time - location.elapsedRealtimeNanos / 1_000_000L
 
             if (isFirstLocation) isFirstLocation = false
             else timeToBootList.add(thisTimeToBoot)
@@ -51,12 +46,11 @@ class ActivityMain: AppCompatActivity()
 
             Log.v(
                 "LOCATION",
-                "Time GPS: $time, delay = $thisTimeToBoot (${location.provider}) => $timeToBoot" +
-                        ", stdev = ${timeToBootList.stdev().format(2)}"
+                "Time GPS: ${Globals.formatTimeToMillis.format(location.time)}, " +
+                        "delay = $thisTimeToBoot (${location.provider})"
             )
 
             timeToBoot = if(timeToBootList.isEmpty()) 0 else timeToBootList.mean().toLong()
-            timeToBootStdDev = if(timeToBootList.isEmpty()) 0.0 else timeToBootList.stdev()
         }
 
         override fun onProviderEnabled(provider: String) {}
@@ -65,8 +59,7 @@ class ActivityMain: AppCompatActivity()
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
     }
 
-    override fun onCreate(savedInstanceState: Bundle?)
-    {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -128,8 +121,7 @@ class ActivityMain: AppCompatActivity()
         db["test/test1/testKey"] = "testValue"
 
         //  Version
-        db["currentVersion",
-        {
+        db["currentVersion", {
             if(it.isSuccessful) {
                 if (it.result.value.toString() == versionName) tText.append("\nversion ist aktuell")
                 else tText.append("\nVERSION IST VERALTET\nlösche diese Version.\nGehe dann in onedrive, klicke bei der neuen version auf herunterladen.\nGehe dann auf Dateien/Downloads und installiere sie.")
@@ -161,25 +153,19 @@ class ActivityMain: AppCompatActivity()
         spinner.setSelection(0)
     }
 
-    private fun startMaster()
-    {
-        db["masters/$androidIdd",
-            { task ->
+    private fun startMaster() {
+        db["masters/$androidIdd", { task ->
                 if(task.isSuccessful) ActivityController.launchMaster(this, androidIdd)
                 else Toast.makeText(this, "failure", Toast.LENGTH_LONG).show()
             }
-        ] = hashMapOf(
-            "isActive" to true
-        )
+        ] = hashMapOf("isActive" to true)
     }
 
-    private fun startSlave()
-    {
+    private fun startSlave() {
         bSlave.isEnabled = false
 
         db["masters", {
-            if(!it.isSuccessful)
-            {
+            if(!it.isSuccessful) {
                 Toast.makeText(this, "failure", Toast.LENGTH_LONG).show()
                 bSlave.isEnabled = true
             }
@@ -238,7 +224,7 @@ class ActivityMain: AppCompatActivity()
     companion object {
         private val timeToBootList:MutableList<Long> = mutableListOf()
         private var timeToBoot:Long = 0
-        var timeToBootStdDev:Double = 0.0; private set;
+        val timeToBootStdDev:Double get() = if(timeToBootList.isEmpty()) 0.0 else timeToBootList.stdev()
         val timerSynchronized: MyTimer get() = MyTimer(timeToBoot)
     }
 }

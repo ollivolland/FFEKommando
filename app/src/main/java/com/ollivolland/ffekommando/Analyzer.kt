@@ -58,7 +58,7 @@ class Analyzer {
             val mediaMeta: MetadataEditor = MetadataEditor.createFrom(File(path))
             val meta: MutableMap<String, MetaValue> = mediaMeta.keyedMeta
             val json = JSONObject(meta["com.apple.quicktime.title"].toString())
-            return (Globals.formatToMillis.parse(json["dateCommand"].toString())!!.time - Globals.formatToMillis.parse(json["dateVideoStart"].toString())!!.time)
+            return (Globals.formatDayToMillis.parse(json["dateCommand"].toString())!!.time - Globals.formatDayToMillis.parse(json["dateVideoStart"].toString())!!.time)
         }
 
         fun getDifferenceBitmap(extractor: MyMediaExtractor, frameIndex:Int, initXOfLine:Int = -1): Pair<Bitmap, Long> {

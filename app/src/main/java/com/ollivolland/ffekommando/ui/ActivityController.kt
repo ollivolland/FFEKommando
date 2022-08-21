@@ -126,7 +126,7 @@ class ActivityController : AppCompatActivity() {
                 runOnUiThread {
                     try {
                         var newText = "\n\ndelay to GPS time = ${ActivityMain.timerSynchronized.time - System.currentTimeMillis()} ms\n" +
-                            "time = ${Globals.formatToTimeOfDay.format(Date(time))}" +
+                            "time = ${Globals.formatTimeToSeconds.format(Date(time))}" +
                             "   (± ${ActivityMain.timeToBootStdDev.format(0)} ms)"
 
                         if(isMaster) {
@@ -174,7 +174,7 @@ class ActivityController : AppCompatActivity() {
         mapCameraInstanceToView[config] = ViewInstance(this, vParent)
         mapCameraInstanceToView[config]!!.let { view ->
             runOnUiThread {
-                view.vViewText.text = "start at ${Globals.formatToTimeOfDay.format(Date(config.correctedTimeStartCamera))}"
+                view.vViewText.text = "start at ${Globals.formatTimeToSeconds.format(Date(config.correctedTimeStartCamera))}"
                 vParent.addView(view.container, 1)
             }
         }
