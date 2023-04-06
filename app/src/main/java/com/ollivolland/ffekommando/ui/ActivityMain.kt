@@ -102,8 +102,14 @@ class ActivityMain: AppCompatActivity() {
 
         tText.append("version = $versionName")
 
-        val selectionCommandBuilder = arrayOf("feuerwehr", "feuerwehr_slowenisch", "leichtathletik10", "leichtathletik20", "leichtathletik30", "feuerwehrstaffel")
-        configSpinner(vSpinnerCommand, arrayOf("feuerwehr", "feuerwehr slowenisch", "leichtathletik 10 sek", "leichtathletik 20 sek", "leichtathletik 30 sek", "feuerwehrstaffel")) { i ->
+        val selectionCommandBuilder = arrayOf("feuerwehr", "feuerwehr_slowenisch",
+            "leichtathletik10", "leichtathletik20", "leichtathletik30",
+            "leichtathletikLang10", "leichtathletikLang20", "leichtathletikLang30",
+            "feuerwehrstaffel")
+        configSpinner(vSpinnerCommand, arrayOf("feuerwehr", "feuerwehr slowenisch",
+            "leichtathletik 10 sek", "leichtathletik 20 sek", "leichtathletik 30 sek",
+            "leichtathletik LANG 10 sek", "leichtathletik LANG 20 sek", "leichtathletik LANG 30 sek",
+            "feuerwehrstaffel")) { i ->
             DefaultCameraConfig.default.commandBuilder = selectionCommandBuilder[i]
         }
 

@@ -77,6 +77,39 @@ abstract class MyCommand(activity: Activity) {
                         executionDelay = delayToReady + delayToShot + 1_000L
                     }.build()
                 }
+                "leichtathletikLang10" -> {
+                    val delayToReady = 10_000L
+                    val delayToShot = random.nextLong(2_000L,4_000L)
+
+                    return MyCommandBuilder(activity, key).apply {
+                        this[R.raw.aufdieplaetze] = 0L
+                        this[R.raw.fertig] = delayToReady
+                        this[R.raw.gunshot_10db_1s_delayed] = delayToReady + delayToShot
+                        executionDelay = delayToReady + delayToShot + 1_000L
+                    }.build()
+                }
+                "leichtathletikLang20" -> {
+                    val delayToReady = 20_000L
+                    val delayToShot = random.nextLong(2_000L,4_000L)
+
+                    return MyCommandBuilder(activity, key).apply {
+                        this[R.raw.aufdieplaetze] = 0L
+                        this[R.raw.fertig] = delayToReady
+                        this[R.raw.gunshot_10db_1s_delayed] = delayToReady + delayToShot
+                        executionDelay = delayToReady + delayToShot + 1_000L
+                    }.build()
+                }
+                "leichtathletikLang30" -> {
+                    val delayToReady = 30_000L
+                    val delayToShot = random.nextLong(2_000L,4_000L)
+
+                    return MyCommandBuilder(activity, key).apply {
+                        this[R.raw.aufdieplaetze] = 0L
+                        this[R.raw.fertig] = delayToReady
+                        this[R.raw.gunshot_10db_1s_delayed] = delayToReady + delayToShot
+                        executionDelay = delayToReady + delayToShot + 1_000L
+                    }.build()
+                }
                 else -> throw Exception("false build command")
             }
         }
