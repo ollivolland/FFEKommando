@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -34,11 +35,9 @@ class ActivityCamera : AppCompatActivity() {
     private var camera: MyCamera? = null
     private lateinit var bStop: ImageButton
     private lateinit var vCameraSurface:PreviewView
-    private lateinit var vTexture:TextureView
     private var fileName = ""; var path = ""
     private lateinit var threadCamera:Thread
     private lateinit var threadCommand:Thread
-    private lateinit var threadStreamer:Thread
     private lateinit var cameraInstance: CameraInstance
     private lateinit var timerSynchronized: MyTimer
     private var myCommandObserver: MyCommand? = null
@@ -47,6 +46,7 @@ class ActivityCamera : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         timerSynchronized = Companion.timerSynchronized!!
         cameraInstance = nextInstance!!
@@ -60,62 +60,11 @@ class ActivityCamera : AppCompatActivity() {
         path = "$dir/$fileName"
 
         vCameraSurface = findViewById(R.id.start_sCameraView)
-        vTexture = findViewById(R.id.start_sTextureView)
         val tText:TextView = findViewById(R.id.camera_tText)
-        val vLine:View = findViewById(R.id.start_vLine)
         bStop = findViewById(R.id.start_bStop)
 
         bStop.isEnabled = false
         bStop.setOnClickListener { stop("click") }
-
-        //  Streamer
-        threadStreamer = Thread {
-            val myStreamer = MyStreamer(this, vTexture)
-            val yuvToRgbConverter = YuvToRgbConverter(this)
-            var lastBitmap:Bitmap = Bitmap.createBitmap(myStreamer.PREVIEW_WIDTH, myStreamer.PREVIEW_HEIGHT, Bitmap.Config.ARGB_8888)
-            var newBitmap:Bitmap = Bitmap.createBitmap(myStreamer.PREVIEW_WIDTH, myStreamer.PREVIEW_HEIGHT, Bitmap.Config.ARGB_8888)
-            var frameNum = 0
-            try {
-
-                myStreamer.apply {
-                    prepare()
-                    startAt(cameraInstance.correctedTimeStartCamera)
-                    withImage {
-                        val image = it.acquireLatestImage() ?: return@withImage
-
-                        log += "image available from ${image.timestamp}, ${SystemClock.elapsedRealtimeNanos()}"
-
-                        yuvToRgbConverter.yuvToRgb(image, newBitmap)
-
-                        if(frameNum > 0 && Analyzer.percentBroken(newBitmap, lastBitmap, (myStreamer.PREVIEW_WIDTH * 0.5).toInt()) > Analyzer.MIN_LINE_BROKEN_FOR_REGISTER) {
-                            thread {
-                                val file =
-                                    File("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)}/broken/${image.timestamp}.png")
-                                file.createNewFile()
-                                FileOutputStream(file).use { out ->
-                                    newBitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-                                    out.flush()
-                                }
-                            }
-                        }
-
-                        lastBitmap = newBitmap
-                        image.close()
-                        frameNum++
-                    }
-                }
-            } catch (e: InterruptedException) {
-                myStreamer.apply {
-                    stop()
-                    destroy()
-                }
-            } catch (e: Exception) {
-                Firebase.crashlytics.recordException(e)
-            } finally {
-                lastBitmap.recycle()
-                newBitmap.recycle()
-            }
-        }
 
         //  Camera
         threadCamera = Thread {
@@ -166,10 +115,6 @@ class ActivityCamera : AppCompatActivity() {
             }
         }
 
-        if(cameraInstance.isTest) vTexture.visibility = View.VISIBLE
-
-        if(cameraInstance.isAnalyze) vLine.visibility = View.VISIBLE
-
         if(cameraInstance.isCamera) vCameraSurface.visibility = View.VISIBLE
         else tText.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
 
@@ -189,7 +134,6 @@ class ActivityCamera : AppCompatActivity() {
     private fun start() {
         if(cameraInstance.isCommand) threadCommand.start()
         if(cameraInstance.isCamera) threadCamera.start()
-        if(cameraInstance.isTest) threadStreamer.start()    //  TODO
 
         //  stopper thread
         thread {
@@ -213,7 +157,6 @@ class ActivityCamera : AppCompatActivity() {
 
         threadCamera.interrupt()
         threadCommand.interrupt()
-        threadStreamer.interrupt()
 
         finish()
     }

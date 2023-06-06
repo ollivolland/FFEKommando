@@ -17,22 +17,21 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.google.android.material.switchmaterial.SwitchMaterial
 import com.ollivolland.ffekommando.*
 import com.ollivolland.ffekommando.R
 
 
 class ActivityMain: AppCompatActivity() {
+    private val version:Int by lazy { applicationContext.packageManager.getPackageInfo(applicationContext.packageName, 0).versionCode }
     var isFirstLocation = true
     lateinit var androidIdd:String
     lateinit var bMaster:Button
     lateinit var bSlave:Button
-    lateinit var sCamera:SwitchMaterial
-    lateinit var sCommand:SwitchMaterial
-    lateinit var sAnalyze:SwitchMaterial
-    lateinit var sTest:SwitchMaterial
+    lateinit var sCamera:SwitchCompat
+    lateinit var sCommand:SwitchCompat
     lateinit var db: MyDB
     lateinit var locationManager:LocationManager
 
@@ -82,11 +81,8 @@ class ActivityMain: AppCompatActivity() {
 
         bMaster = findViewById(R.id.main_bMaster)
         bSlave = findViewById(R.id.main_bSlave)
-        val bAnalyze:Button = findViewById(R.id.main_bAnalyze)
         sCamera = findViewById(R.id.main_sCamera)
         sCommand = findViewById(R.id.main_sCommand)
-        sAnalyze = findViewById(R.id.main_sAnalyze)
-        sTest = findViewById(R.id.main_sTest)
         val vSpinnerCommand = findViewById<Spinner>(R.id.spinnerCommand)
         val vSpinnerDuration = findViewById<Spinner>(R.id.spinnerDuration)
         val vSpinnerDelay = findViewById<Spinner>(R.id.spinnerDelay)
@@ -94,22 +90,14 @@ class ActivityMain: AppCompatActivity() {
 
         bMaster.setOnClickListener { startMaster() }
         bSlave.setOnClickListener { startSlave() }
-        bAnalyze.setOnClickListener { startActivity(Intent(this, ActivityAnalyze::class.java)) }
         sCamera.setOnClickListener { DefaultCameraConfig.default.isCamera = sCamera.isChecked }
         sCommand.setOnClickListener { DefaultCameraConfig.default.isCommand = sCommand.isChecked }
-        sAnalyze.setOnClickListener { DefaultCameraConfig.default.isAnalyze = sAnalyze.isChecked }
-        sTest.setOnClickListener { DefaultCameraConfig.default.isTest = sTest.isChecked }
 
-        tText.append("version = $versionName")
+        tText.append("sdk = ${Build.VERSION.SDK_INT}\nversion = $version")
 
-        val selectionCommandBuilder = arrayOf("feuerwehr", "feuerwehr_slowenisch",
-            "leichtathletik10", "leichtathletik20", "leichtathletik30",
-            "leichtathletikLang10", "leichtathletikLang20", "leichtathletikLang30",
-            "feuerwehrstaffel")
-        configSpinner(vSpinnerCommand, arrayOf("feuerwehr", "feuerwehr slowenisch",
-            "leichtathletik 10 sek", "leichtathletik 20 sek", "leichtathletik 30 sek",
-            "leichtathletik LANG 10 sek", "leichtathletik LANG 20 sek", "leichtathletik LANG 30 sek",
-            "feuerwehrstaffel")) { i ->
+        val selectionCommandBuilder = arrayOf("feuerwehr", "feuerwehr_slowenisch", "feuerwehrstaffel")
+        configSpinner(vSpinnerCommand, arrayOf("feuerwehr", "feuerwehr slowenisch", "feuerwehrstaffel"))
+        { i ->
             DefaultCameraConfig.default.commandBuilder = selectionCommandBuilder[i]
         }
 
@@ -124,13 +112,12 @@ class ActivityMain: AppCompatActivity() {
         }
 
         db = MyDB(this)
-        db["test/test1/testKey"] = "testValue"
 
         //  Version
-        db["currentVersion", {
+        db["ffekommando/currentVersion", {
             if(it.isSuccessful) {
-                if (it.result.value.toString() == versionName) tText.append("\nversion ist aktuell")
-                else tText.append("\nVERSION IST VERALTET\nlösche diese Version.\nGehe dann in onedrive, klicke bei der neuen version auf herunterladen.\nGehe dann auf Dateien/Downloads und installiere sie.")
+                if (it.result.value.toString().toInt() == version) tText.append("\n\nversion ist aktuell")
+                else tText.append("\n\nVERSION IST VERALTET\nlösche diese Version.\nLade dei neue version aus onedrive herunter,\ndann suche in Downloads nach der .apk-Datei.\nInstalliere diese.")
             }
         }]
 
@@ -225,11 +212,9 @@ class ActivityMain: AppCompatActivity() {
             }
     }
 
-    private val versionName:String get() = applicationContext.packageManager.getPackageInfo(applicationContext.packageName, 0).versionName
-
     companion object {
         private val timeToBootList:MutableList<Long> = mutableListOf()
-        private var timeToBoot:Long = 0
+        private var timeToBoot:Long = System.currentTimeMillis() - SystemClock.elapsedRealtime()
         val timeToBootStdDev:Double get() = if(timeToBootList.isEmpty()) 0.0 else timeToBootList.stdev()
         val timerSynchronized: MyTimer get() = MyTimer(timeToBoot)
     }

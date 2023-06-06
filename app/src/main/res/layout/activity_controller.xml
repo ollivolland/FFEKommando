@@ -18,10 +18,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:layout_margin="8dp"
-            android:background="@drawable/card"
+            android:layout_margin="10dp"
             android:orientation="vertical"
-            >
+            android:background="@drawable/card"
+            tools:ignore="UselessParent">
 
             <TextView   android:id="@+id/controller_tText"
                 android:layout_width="match_parent"
@@ -37,19 +37,19 @@
                 android:visibility="gone"
                 >
 
-                <Button android:id="@+id/controller_bStart"
+                <ImageButton android:id="@+id/controller_bStart"
+                    style="@style/Theme.FFEKommando.ImageButton"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
-                    android:textSize="10sp"
-                    android:text="Start"
+                    android:src="@drawable/outline_play_48"
                     />
 
-                <Button android:id="@+id/controller_bSchedule"
+                <ImageButton android:id="@+id/controller_bSchedule"
+                    style="@style/Theme.FFEKommando.ImageButton"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
                     android:layout_marginStart="100dp"
-                    android:textSize="10sp"
-                    android:text="Schedule"
+                    android:src="@drawable/outline_watch_48"
                     />
 
             </LinearLayout>

@@ -4,17 +4,20 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.res.ResourcesCompat
 import com.ollivolland.ffekommando.*
 import java.util.*
 import kotlin.concurrent.thread
 
+
 class ActivityController : AppCompatActivity() {
-    lateinit var wakeLock: WakeLock
     lateinit var db: MyDB
     var text:String = ""
     private val listRegisteredCamerasStarts = mutableListOf<Long>()
@@ -27,13 +30,13 @@ class ActivityController : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_controller)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         db = MyDB(this)
-        wakeLock = WakeLock(this)
 
         val tText: TextView = findViewById(R.id.controller_tText)
-        val bStart:Button = findViewById(R.id.controller_bStart)
-        val bSchedule:Button = findViewById(R.id.controller_bSchedule)
+        val bStart:ImageButton = findViewById(R.id.controller_bStart)
+        val bSchedule:ImageButton = findViewById(R.id.controller_bSchedule)
         val vMaster:LinearLayout = findViewById(R.id.controller_lMaster)
         vParent = findViewById(R.id.controller_lParent)
         text = if(isMaster) "master ($myId)" else "slave ($myId)\nmaster id: $masterId"
@@ -54,6 +57,7 @@ class ActivityController : AppCompatActivity() {
                 )
 
                 registerStartCamera(withConfig)
+                Toast.makeText(this, "wird in ${DefaultCameraConfig.default.millisDelay / 1000L}s starten", Toast.LENGTH_SHORT).show()
             }
 
             if (Build.VERSION.SDK_INT >= 23)
@@ -105,8 +109,6 @@ class ActivityController : AppCompatActivity() {
                     val withConfig = CameraInstance(
                         isCamera = DefaultCameraConfig.default.isCamera,
                         isCommand = DefaultCameraConfig.default.isCommand,
-                        isAnalyze = DefaultCameraConfig.default.isAnalyze,
-                        isTest = DefaultCameraConfig.default.isTest,
                         commandFullName = command,
                         correctedTimeStartCamera = timeStartCamera,
                         correctedTimeCommandExecuted = child.child("correctedTimeCommandExecuted").value as Long,
@@ -137,7 +139,7 @@ class ActivityController : AppCompatActivity() {
                         }
 
                         tText.text = text + newText
-                    } catch (e:Exception) {}
+                    } catch (_:Exception) {}
                 }
 
                 //  start planned cameras
@@ -163,7 +165,6 @@ class ActivityController : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
 
-        wakeLock.release()
         isExists = false
     }
 

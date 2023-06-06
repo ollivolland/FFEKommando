@@ -5,8 +5,6 @@ import android.app.Activity
 class DefaultCameraConfig(
     var isCamera: Boolean,
     var isCommand: Boolean,
-    var isAnalyze: Boolean,
-    var isTest: Boolean,
     var commandBuilder: String,
     var millisDelay: Long,
     var millisVideoDuration: Long) {
@@ -17,8 +15,6 @@ class DefaultCameraConfig(
         return CameraInstance(
             isCamera = isCamera,
             isCommand = isCommand,
-            isAnalyze = isAnalyze,
-            isTest = isTest,
             commandFullName = commandWrapper.name,
             correctedTimeStartCamera = correctedTimeStartCamera,
             correctedTimeCommandExecuted = correctedTimeStartCamera + commandWrapper.time,
@@ -30,8 +26,6 @@ class DefaultCameraConfig(
         val default = DefaultCameraConfig(
             isCamera = false,
             isCommand = false,
-            isAnalyze = false,
-            isTest = false,
             commandBuilder = "feuerwehr",
             millisDelay = 5_000L,
             millisVideoDuration = 10_000L)
@@ -41,8 +35,6 @@ class DefaultCameraConfig(
 class CameraInstance(
     val isCamera: Boolean,
     val isCommand: Boolean,
-    val isAnalyze: Boolean,
-    val isTest: Boolean,
     val commandFullName: String,
     val correctedTimeStartCamera:Long,
     val correctedTimeCommandExecuted:Long,
