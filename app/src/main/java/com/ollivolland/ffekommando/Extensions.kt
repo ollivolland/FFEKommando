@@ -1,6 +1,5 @@
 package com.ollivolland.ffekommando
 
-import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sqrt
 

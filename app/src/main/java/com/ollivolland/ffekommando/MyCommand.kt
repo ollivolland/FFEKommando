@@ -18,8 +18,6 @@ abstract class MyCommand(activity: Activity) {
 
         operator fun get(key:String, activity: Activity): MyCommand
         {
-            val random = Random(System.currentTimeMillis())
-
             MyCommandBuilder(activity, "test").apply {
                 this[R.raw.startbefehl_5db] = 0L
                 executionDelay = 19_000L
@@ -42,72 +40,6 @@ abstract class MyCommand(activity: Activity) {
                     return MyCommandBuilder(activity, key).apply {
                         this[R.raw.startbefehl_slowenisch_5db] = 0L
                         executionDelay = 13_000L
-                    }.build()
-                }
-                "leichtathletik10" -> {
-                    val delayToReady = 10_000L
-                    val delayToShot = random.nextLong(1_000L,2_000L)
-
-                    return MyCommandBuilder(activity, key).apply {
-                        this[R.raw.aufdieplaetze] = 0L
-                        this[R.raw.fertig] = delayToReady
-                        this[R.raw.gunshot_10db_1s_delayed] = delayToReady + delayToShot
-                        executionDelay = delayToReady + delayToShot + 1_000L
-                    }.build()
-                }
-                "leichtathletik20" -> {
-                    val delayToReady = 20_000L
-                    val delayToShot = random.nextLong(1_000L,2_000L)
-
-                    return MyCommandBuilder(activity, key).apply {
-                        this[R.raw.aufdieplaetze] = 0L
-                        this[R.raw.fertig] = delayToReady
-                        this[R.raw.gunshot_10db_1s_delayed] = delayToReady + delayToShot
-                        executionDelay = delayToReady + delayToShot + 1_000L
-                    }.build()
-                }
-                "leichtathletik30" -> {
-                    val delayToReady = 30_000L
-                    val delayToShot = random.nextLong(1_000L,2_000L)
-
-                    return MyCommandBuilder(activity, key).apply {
-                        this[R.raw.aufdieplaetze] = 0L
-                        this[R.raw.fertig] = delayToReady
-                        this[R.raw.gunshot_10db_1s_delayed] = delayToReady + delayToShot
-                        executionDelay = delayToReady + delayToShot + 1_000L
-                    }.build()
-                }
-                "leichtathletikLang10" -> {
-                    val delayToReady = 10_000L
-                    val delayToShot = random.nextLong(2_000L,4_000L)
-
-                    return MyCommandBuilder(activity, key).apply {
-                        this[R.raw.aufdieplaetze] = 0L
-                        this[R.raw.fertig] = delayToReady
-                        this[R.raw.gunshot_10db_1s_delayed] = delayToReady + delayToShot
-                        executionDelay = delayToReady + delayToShot + 1_000L
-                    }.build()
-                }
-                "leichtathletikLang20" -> {
-                    val delayToReady = 20_000L
-                    val delayToShot = random.nextLong(2_000L,4_000L)
-
-                    return MyCommandBuilder(activity, key).apply {
-                        this[R.raw.aufdieplaetze] = 0L
-                        this[R.raw.fertig] = delayToReady
-                        this[R.raw.gunshot_10db_1s_delayed] = delayToReady + delayToShot
-                        executionDelay = delayToReady + delayToShot + 1_000L
-                    }.build()
-                }
-                "leichtathletikLang30" -> {
-                    val delayToReady = 30_000L
-                    val delayToShot = random.nextLong(2_000L,4_000L)
-
-                    return MyCommandBuilder(activity, key).apply {
-                        this[R.raw.aufdieplaetze] = 0L
-                        this[R.raw.fertig] = delayToReady
-                        this[R.raw.gunshot_10db_1s_delayed] = delayToReady + delayToShot
-                        executionDelay = delayToReady + delayToShot + 1_000L
                     }.build()
                 }
                 else -> throw Exception("false build command")
@@ -172,7 +104,7 @@ abstract class MyCommand(activity: Activity) {
                                 sleepUntil { !mps[i].isPlaying }
                                 mps[i].release()
                                 Log.i("COMMAND", "MediaPlayer[$i] released bc. unused")
-                            } catch (e:Exception) { }
+                            } catch (_:Exception) { }
                         }
                 }
 
