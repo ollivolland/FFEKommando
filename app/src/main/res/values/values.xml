@@ -1,0 +1,86 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="Theme.ffe" parent="Theme.AppCompat.DayNight.NoActionBar">
+
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorBackgroundFloating">@color/background_card</item>
+
+
+        <!-- Customize your theme here. -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <item name="android:textColor">#000</item>
+        <item name="android:textColorPrimary">#000</item>
+        <item name="android:textColorSecondary">#000</item>
+
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:navigationBarColor">@color/background</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <item name="dialogTheme">@style/Theme.ffe.dialog</item>
+    </style>
+
+    <style name="Theme.ffe.Fullscreen" parent="Theme.ffe">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+
+    <style name="Theme.ffe.SemiFullscreen" parent="Theme.ffe">
+        <item name="windowNoTitle">true</item>
+    </style>
+
+
+    <style name="Theme.ffe.dialog" parent="Theme.ffe">
+        <item name="android:background">#fff</item>
+        <item name="android:windowBackground">#fff</item>
+    </style>
+
+    <!-- STYLES -->
+
+    <style name="Theme.ffe.Button" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/button_selector</item>
+        <item name="android:textColor">@color/on_primary</item>
+    </style>
+
+    <style name="Theme.ffe.ImageButton" parent="Widget.AppCompat.ImageButton">
+        <item name="android:background">@drawable/button_selector</item>
+    </style>
+
+
+    <!-- colors -->
+
+    <color name="primary">#BB86FC</color>
+    <color name="primary_light">#DAABFC</color>
+    <color name="primary_complement">#B0AE3A</color>
+    <!--    <color name="primary_complement">#FCFB86</color>-->
+    <color name="on_primary">#333333</color>
+
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="transparent">#00000000</color>
+    <color name="background">#333333</color>
+    <color name="background_card">#FFFFFF</color>
+    <color name="green">#00ff00</color>
+
+
+
+    <attr name="text" format="string"/>
+
+    <declare-styleable name="SettingsSpinner">
+        <attr name="text" />
+    </declare-styleable>
+
+    <declare-styleable name="SettingsSwitch">
+        <attr name="text" />
+    </declare-styleable>
+</resources>

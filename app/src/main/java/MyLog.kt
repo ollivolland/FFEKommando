@@ -1,5 +1,3 @@
-package com.ollivolland.ffekommando
-
 import android.util.Log
 
 class MyLog(private val tag:String) {

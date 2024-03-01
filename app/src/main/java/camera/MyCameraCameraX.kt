@@ -1,29 +1,25 @@
-package com.ollivolland.ffekommando
+package camera
 
+import Globals
+import MyTimer
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.PackageManager
-import android.hardware.camera2.CaptureRequest
 import android.os.SystemClock
-import android.util.Range
-import android.widget.Toast
-import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.*
 import androidx.camera.core.impl.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
 import androidx.camera.video.VideoCapture
-import androidx.camera.video.impl.VideoCaptureConfig
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import java.io.File
-import kotlin.concurrent.thread
 
 
-class MyCameraCameraX(private val activity: Activity, private val vPreviewSurface:PreviewView, val path:String, val videoProfile:Int, private val timerSynchronized: MyTimer) : MyCamera() {
+class MyCameraCameraX(private val activity: Activity, private val vPreviewSurface:PreviewView, val path:String, private val timerSynchronized: MyTimer) : IMyCamera() {
 
     private lateinit var videoCapture: VideoCapture<Recorder>
     private val cameraProviderFuture = ProcessCameraProvider.getInstance(activity)
@@ -31,17 +27,20 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
     private val qualitySelector = QualitySelector.from(Quality.FHD)
     private val executor = ContextCompat.getMainExecutor(activity)
     private var isHasCaptured = false
-    private var isVideoSaved = false
     private var recording:Recording? = null
-    private var logCatReader:LogCatReader? = null
 
     init {
+        if(path.isBlank())
+            throw Exception()
+    }
+
+    override fun init() {
         log += "init"
 
         cameraProviderFuture.addListener({
             cameraProvider = cameraProviderFuture.get()
 
-             create()
+            create()
         }, executor)
     }
 
@@ -59,6 +58,7 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
         }
 
         isHasCaptured = true
+        log += "START"
 
         recording = videoCapture.output
             .prepareRecording(activity, FileOutputOptions.Builder(File(path)).build())
@@ -66,34 +66,28 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
             .start(executor) {
             when (it) {
                 is VideoRecordEvent.Start -> {
-                    log += "VIDEO START ${SystemClock.uptimeMillis()}000"
-                    logCatReader = LogCatReader()
-                }
-                is VideoRecordEvent.Pause -> {
-                    log += "VIDEO PAUSE ${SystemClock.uptimeMillis() - (it.recordingStats.recordedDurationNanos / 1E6).toLong()}000"
+                    timeSynchronizedStartedRecording = timerSynchronized.time
+                    val x = timerSynchronized.time
+                    log += "VIDEO Start ${Globals.formatDayToMillis.format(x)}"
+                    log += "VIDEO Start ${x - timerSynchronized.bootTime}"
                 }
                 is VideoRecordEvent.Finalize -> {
-                    try {
-                        val timeUs = logCatReader!!.getStartTimeUsAndDestroy()
-                        log += "TIME START = $timeUs"
-                        timeSynchronizedStartedRecording = timerSynchronized.time - SystemClock.uptimeMillis() + (timeUs / 1000)
-                    } catch (e:Exception) { Toast.makeText(activity, "error in logcat spying", Toast.LENGTH_LONG).show() }
-
-                    log += "VIDEO FINALIZED"
-                    isVideoSaved = true
+                    val x = timerSynchronized.bootTime + SystemClock.elapsedRealtime() - (it.recordingStats.recordedDurationNanos * 1E-6).toLong()
+                    log += "VIDEO Finalize ${Globals.formatDayToMillis.format(x)}"
+                    log += "VIDEO Finalize ${x - timerSynchronized.bootTime}"
                 }
             }
         }
     }
 
     override fun stopRecord() {
+        log += "STOP"
+
         recording?.pause()
         recording?.stop()
 
         cameraProviderFuture.cancel(true)
         activity.runOnUiThread { cameraProvider.unbindAll() }
-
-        while (!isVideoSaved) Thread.sleep(10)
     }
 
     @SuppressLint("RestrictedApi", "UnsafeOptInUsageError")
@@ -117,33 +111,5 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
             .build())
 
         cameraProvider.bindToLifecycle(activity as LifecycleOwner, cameraSelector, videoCapture, preview)
-    }
-
-    companion object {
-        class LogCatReader() {
-
-            private val lines = mutableListOf<String>()
-            var process:Process? = null
-
-            init {
-                thread {
-                    val process = Runtime.getRuntime().exec("logcat")
-                    process.inputStream
-                        .bufferedReader()
-                        .useLines { newLines -> newLines.forEach { line -> lines.add(line) } }
-                }
-            }
-
-            fun getStartTimeUsAndDestroy(): Long {
-                val targetLine =
-                    lines.toTypedArray().last { x -> x.contains("MPEG4Writer") && x.contains("setStartTimestampUs") }
-                val time = targetLine.split(" ").last().toLong()
-
-                //  terminate
-                process?.destroy()
-
-                return time
-            }
-        }
     }
 }

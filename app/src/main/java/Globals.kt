@@ -1,5 +1,3 @@
-package com.ollivolland.ffekommando
-
 import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings

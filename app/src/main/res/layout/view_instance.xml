@@ -22,6 +22,7 @@
         android:src="@drawable/outline_close_24"
         android:scaleType="fitCenter"
         android:padding="10dp"
+        android:visibility="gone"
         />
 
 </RelativeLayout>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.ollivolland.ffekommando">
+    package="com.ollivolland.ffe">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -21,10 +21,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.FFEKommando">
+        android:theme="@style/Theme.ffe">
 
         <activity
-            android:name=".ui.ActivityMain"
+            android:name="com.ollivolland.ffe.ActivityMain"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -35,16 +35,10 @@
         </activity>
 
         <activity
-            android:name=".ui.ActivityController"
+            android:name="com.ollivolland.ffe.ActivityCamera"
             android:exported="false"
             android:screenOrientation="landscape"
-            android:theme="@style/Theme.FFEKommando" />
-
-        <activity
-            android:name=".ui.ActivityCamera"
-            android:exported="false"
-            android:screenOrientation="landscape"
-            android:theme="@style/Theme.FFEKommando.Fullscreen" />
+            android:theme="@style/Theme.ffe.Fullscreen" />
     </application>
 
 </manifest>

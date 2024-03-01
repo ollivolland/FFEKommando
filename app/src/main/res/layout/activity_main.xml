@@ -1,114 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:keepScreenOn="true"
-    tools:context=".ui.ActivityMain"
     android:background="@color/background"
-    >
+    tools:context=".ActivityMain">
 
-    <LinearLayout
+    <LinearLayout android:id="@+id/controller_lParent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center"
-        android:layout_margin="10dp"
-        android:background="@drawable/card"
         >
 
-        <RelativeLayout android:id="@+id/main_lButtons"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
-            android:gravity="center_horizontal|top"
-            >
-
-            <Button android:id="@+id/main_bMaster"
-                style="@style/Theme.FFEKommando.Button"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:text="Meister"
-                android:textSize="10sp"
-                android:contentDescription="@string/main_bStartContentDescription"
-                />
-
-            <Button android:id="@+id/main_bSlave"
-                style="@style/Theme.FFEKommando.Button"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_marginStart="150dp"
-                android:textSize="10sp"
-                android:text="Sklave"
-                android:contentDescription="@string/main_bCameraContentDescription"
-                />
-
-        </RelativeLayout>
-
-        <LinearLayout android:id="@+id/main_lSwitches"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:layout_margin="10dp"
             android:orientation="vertical"
-            android:layout_marginTop="30dp"
-            android:gravity="end"
-            android:layoutDirection="rtl"
-            >
+            android:background="@drawable/card"
+            tools:ignore="UselessParent">
 
-            <androidx.appcompat.widget.SwitchCompat android:id="@+id/main_sCommand"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Kommando"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:checked="false"
-                app:switchPadding="20dp"
+            <ImageButton
+                android:id="@+id/main_settings"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/outline_settings_24"
+                android:layout_gravity="end"
+                android:background="@color/transparent"
                 />
 
-            <androidx.appcompat.widget.SwitchCompat android:id="@+id/main_sCamera"
+            <TextView   android:id="@+id/controller_tText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                />
+
+            <LinearLayout android:id="@+id/controller_lMaster"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="Kamera"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:checked="false"
-                app:switchPadding="20dp"
-                />
+                android:orientation="horizontal"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp"
+                android:visibility="gone"
+                >
+
+                <ImageButton android:id="@+id/controller_bStart"
+                    style="@style/Theme.ffe.ImageButton"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:src="@drawable/outline_play_48"
+                    />
+
+<!--                <ImageButton android:id="@+id/controller_bSchedule"-->
+<!--                    style="@style/Theme.ffe.ImageButton"-->
+<!--                    android:layout_width="100dp"-->
+<!--                    android:layout_height="100dp"-->
+<!--                    android:layout_marginStart="100dp"-->
+<!--                    android:src="@drawable/outline_watch_48"-->
+<!--                    />-->
+
+            </LinearLayout>
 
         </LinearLayout>
-
-        <Spinner    android:id="@+id/spinnerCommand"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:spinnerMode="dialog"
-            android:tooltipText="Kommando"
-            />
-
-        <Spinner    android:id="@+id/spinnerDuration"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:spinnerMode="dialog"
-            android:tooltipText="Dauer"
-            />
-
-        <Spinner    android:id="@+id/spinnerDelay"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:spinnerMode="dialog"
-            android:tooltipText="Delay"
-            />
-
-        <TextView   android:id="@+id/main_tDescription"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="50dp"
-            android:layout_marginTop="50dp"
-            android:layout_marginBottom="50dp"
-            android:textSize="11sp"
-            />
 
     </LinearLayout>
 
