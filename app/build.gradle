@@ -13,8 +13,8 @@ android {
         applicationId "com.ollivolland.ffe"
         minSdk 27
         targetSdk 34
-        versionCode 8
-        versionName "2023-06-06R"
+        versionCode 9
+        versionName "9"
     }
     buildTypes {
         release {

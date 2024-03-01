@@ -24,11 +24,12 @@
 
             <ImageButton
                 android:id="@+id/main_settings"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:src="@drawable/outline_settings_24"
                 android:layout_gravity="end"
                 android:background="@color/transparent"
+                android:padding="12dp"
                 />
 
             <TextView   android:id="@+id/controller_tText"
@@ -61,6 +62,15 @@
 <!--                    />-->
 
             </LinearLayout>
+
+
+            <TextView   android:id="@+id/main_version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="11sp"
+                android:textColor="#999"
+                android:layout_gravity="end"
+                />
 
         </LinearLayout>
 

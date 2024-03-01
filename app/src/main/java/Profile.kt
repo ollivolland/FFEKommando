@@ -80,7 +80,7 @@ data class Profile(
     }
 
     companion object {
-        val headerCommand = listOf("keins", "Voll")
+        val headerCommand = listOf("keins", "Wettkampf")
         val optionsDuration = listOf(20_000L, 45_000L)
         val headerDuration = optionsDuration.map { "${it/1000L}s" }
 

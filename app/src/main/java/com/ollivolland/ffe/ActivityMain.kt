@@ -27,7 +27,6 @@ class ActivityMain : AppCompatActivity() {
     private val mapCameraInstanceToView = mutableMapOf<StartInstance, ViewInstance>()
     private lateinit var vParent:LinearLayout
 
-    private var text:String = ""
     private var profile = Profile.default
 
     @SuppressLint("SetTextI18n")
@@ -57,6 +56,7 @@ class ActivityMain : AppCompatActivity() {
         }
 
         val tText: TextView = findViewById(R.id.controller_tText)
+        val vVersion: TextView = findViewById(R.id.main_version)
         val bStart:ImageButton = findViewById(R.id.controller_bStart)
 //        val bSchedule:ImageButton = findViewById(R.id.controller_bSchedule)
         val vSettings:ImageButton = findViewById(R.id.main_settings)
@@ -73,8 +73,10 @@ class ActivityMain : AppCompatActivity() {
         }
 
         vSettings.setOnClickListener {
+            vSettings.isEnabled = false
             profile.inflateDialog(this) {
                 profile = it
+                vSettings.isEnabled = true
             }
         }
 
@@ -100,6 +102,8 @@ class ActivityMain : AppCompatActivity() {
 //                .show()
 //        }
 
+        vVersion.text = "v$version"
+
         //  UI Loop
         thread {
             while (!this.isDestroyed) {
@@ -107,13 +111,11 @@ class ActivityMain : AppCompatActivity() {
 
                 runOnUiThread {
                     try {
-                        val newText =
-                            Globals.formatTimeToSeconds.format(Date(time)) +
+                        val modText = Globals.formatTimeToSeconds.format(Date(time)) +
                             "\n\nKommando ${Profile.headerCommand[profile.command.ordinal]}" +
                             "\nDauer ${profile.millisVideoLength / 1000L}s"
-//                            +"   (± ${ActivityMain.timeToBootStdDev.format(0)} ms)"
 
-                        tText.text = text + newText
+                        tText.text = modText
                     } catch (_:Exception) {}
                 }
 
