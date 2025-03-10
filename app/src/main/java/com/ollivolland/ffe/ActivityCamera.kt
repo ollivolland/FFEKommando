@@ -33,12 +33,14 @@ import kotlin.concurrent.thread
 class ActivityCamera : AppCompatActivity() {
     private var camera: IMyCamera? = null
     private lateinit var bStop: ImageButton
-    private lateinit var vCameraSurface:PreviewView
+//    private lateinit var vCameraSurface: SurfaceView
+    private lateinit var vCameraSurface: PreviewView
     private lateinit var fileName:String
     private lateinit var path:String
     private lateinit var cameraInstance: StartInstance
     private lateinit var timerSynchronized: MyTimer
     private var myCommandObserver: MyCommand? = null
+
 
     private val threadCamera:Thread by lazy { Thread {
         try {
@@ -63,6 +65,7 @@ class ActivityCamera : AppCompatActivity() {
         catch (_: Exception) {}
     }}
 
+
     private val threadCommand:Thread by lazy { Thread {
         var commandWrapper: MyCommand? = null
         try {
@@ -79,6 +82,7 @@ class ActivityCamera : AppCompatActivity() {
             commandWrapper?.stopAndRelease()
         }
     }}
+
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,8 +104,10 @@ class ActivityCamera : AppCompatActivity() {
         if(!File(dir).exists()) File(dir).mkdirs()
         path = "$dir/$fileName"
 
-        bStop.isEnabled = false
-        bStop.setOnClickListener { stop("click") }
+        bStop.setOnClickListener {
+            bStop.visibility = View.INVISIBLE
+            stop("click")
+        }
 
         if(cameraInstance.profile.isCamera) vCameraSurface.visibility = View.VISIBLE
         else tText.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
@@ -118,10 +124,11 @@ class ActivityCamera : AppCompatActivity() {
 
         //  last
         camera = MyCameraCameraX(this, vCameraSurface, path, timerSynchronized)
-//        camera = MyCameraMediaRecorder(path, vCameraSurface, this, timerSynchronized)
+//        camera = MyCameraMediaRecorder(this, vCameraSurface, path, timerSynchronized)
 
         start()
     }
+
 
     private fun start() {
         if(cameraInstance.profile.isCommand) threadCommand.start()
@@ -134,15 +141,16 @@ class ActivityCamera : AppCompatActivity() {
         }
 
         //  Stop button
-        bStop.isEnabled = true
         bStop.visibility = View.VISIBLE
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
 
         stop("activity destroyed")
     }
+
 
     private fun stop(debugReason:String) {
         Log.i("CAMERA", "stopped due to $debugReason")
@@ -155,6 +163,7 @@ class ActivityCamera : AppCompatActivity() {
             finish()
         }
     }
+
 
     private fun tryWriteMetadata() {
         try {
@@ -197,6 +206,7 @@ class ActivityCamera : AppCompatActivity() {
             Log.w("CAMERA", "Metadata error: $e\n${e.stackTraceToString()}")
         }
     }
+
 
     companion object {
         private const val VIDEO_PROFILE = "videoProfile"

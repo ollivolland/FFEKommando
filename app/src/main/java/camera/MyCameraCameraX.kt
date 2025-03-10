@@ -6,12 +6,12 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.SystemClock
 import androidx.camera.core.*
 import androidx.camera.core.impl.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
-import androidx.camera.video.VideoCapture
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -60,21 +60,22 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
         isHasCaptured = true
         log += "START"
 
+
+        val output = FileOutputOptions.Builder(File(path)).setLocation(Location(path)).build()
+
         recording = videoCapture.output
-            .prepareRecording(activity, FileOutputOptions.Builder(File(path)).build())
+            .prepareRecording(activity, output)
             .withAudioEnabled()
             .start(executor) {
             when (it) {
                 is VideoRecordEvent.Start -> {
                     timeSynchronizedStartedRecording = timerSynchronized.time
                     val x = timerSynchronized.time
-                    log += "VIDEO Start ${Globals.formatDayToMillis.format(x)}"
-                    log += "VIDEO Start ${x - timerSynchronized.bootTime}"
+                    log += "VIDEO Start ${Globals.formatDayToMillis.format(x)}=${x - timerSynchronized.bootTime}"
                 }
                 is VideoRecordEvent.Finalize -> {
                     val x = timerSynchronized.bootTime + SystemClock.elapsedRealtime() - (it.recordingStats.recordedDurationNanos * 1E-6).toLong()
-                    log += "VIDEO Finalize ${Globals.formatDayToMillis.format(x)}"
-                    log += "VIDEO Finalize ${x - timerSynchronized.bootTime}"
+                    log += "VIDEO Finalize ${Globals.formatDayToMillis.format(x)}=${x - timerSynchronized.bootTime}"
                 }
             }
         }
@@ -83,7 +84,7 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
     override fun stopRecord() {
         log += "STOP"
 
-        recording?.pause()
+//        recording?.pause()
         recording?.stop()
 
         cameraProviderFuture.cancel(true)
@@ -104,7 +105,7 @@ class MyCameraCameraX(private val activity: Activity, private val vPreviewSurfac
 
         preview.setSurfaceProvider(vPreviewSurface.surfaceProvider)
 
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) return
+//        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) return
 
         videoCapture = VideoCapture.withOutput(Recorder.Builder()
             .setQualitySelector(qualitySelector)

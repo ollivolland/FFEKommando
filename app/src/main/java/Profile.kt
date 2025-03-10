@@ -64,7 +64,7 @@ data class Profile(
         {
             Command.NONE -> 0L;
             Command.FULL -> 19_000L;
-//            Command.SHORT -> 19_000L;
+            Command.SHORT -> 8_263L;
         }
 
         val timePreview = timeWant
@@ -76,11 +76,11 @@ data class Profile(
     enum class Command {
         NONE,
         FULL,
-//        SHORT
+        SHORT
     }
 
     companion object {
-        val headerCommand = listOf("keins", "Wettkampf")
+        val headerCommand = listOf("keins", "Wettkampf", "Mathias")
         val optionsDuration = listOf(20_000L, 45_000L)
         val headerDuration = optionsDuration.map { "${it/1000L}s" }
 

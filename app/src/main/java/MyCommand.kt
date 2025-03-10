@@ -14,19 +14,27 @@ abstract class MyCommand {
         operator fun get(cameraInstance: StartInstance, activity: Activity): MyCommand
         {
             return when (cameraInstance.profile.command) {
-                Profile.Command.NONE -> MyCommandBuilder(activity).build()
-
-                Profile.Command.FULL -> MyCommandBuilder(activity).apply {
-                    this[R.raw.startbefehl_5db] = 0L
-                }.build()
+                Profile.Command.NONE -> {
+                    MyCommandBuilder(activity).build()
+                }
+                Profile.Command.SHORT -> {
+                    MyCommandBuilder(activity).apply {
+                        this[R.raw.startbefehl_2x_5db] = 0L
+                    }.build()
+                }
+                Profile.Command.FULL -> {
+                    MyCommandBuilder(activity).apply {
+                        this[R.raw.startbefehl_5db] = 0L
+                    }.build()
+                }
             }
         }
     }
 
     class MyCommandBuilder(private val activity: Activity) {
-
         private var rawId:Int = -1
         private var delayFromStart:Long = -1L
+        private var isTerminated = false
 
         operator fun set(rawId:Int, delayFromStart:Long) {
             this.rawId = rawId
@@ -67,13 +75,14 @@ abstract class MyCommand {
                             Log.i("COMMAND", "MediaPlayer lag = $observedCommandLag")
 
                             //  release
-                            sleepUntil { !mps.isPlaying }
+                            sleepUntil { isTerminated || !mps.isPlaying }
                             mps.release()
                             Log.i("COMMAND", "MediaPlayer[] released")
                         }
                 }
 
                 override fun stopAndRelease() {
+                    isTerminated = true
                     mpNoise.isLooping = false
 
                     for (mp in arrayOf(mpNoise, mps)) mp.release()

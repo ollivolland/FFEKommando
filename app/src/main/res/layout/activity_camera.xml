@@ -6,7 +6,16 @@
     tools:context=".ActivityCamera"
     android:keepScreenOn="true">
 
-    <androidx.camera.view.PreviewView    android:id="@+id/start_sCameraView"
+<!--    <SurfaceView-->
+<!--        android:id="@+id/start_sCameraView"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:visibility="gone"-->
+<!--        android:layout_centerInParent="true"-->
+<!--        />-->
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/start_sCameraView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"

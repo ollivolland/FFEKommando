@@ -7,8 +7,12 @@ import StartInstance
 import ViewInstance
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import android.view.View
 import android.view.WindowManager
 import android.widget.*
@@ -39,6 +43,8 @@ class ActivityMain : AppCompatActivity() {
         arrayOf(
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.MANAGE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_MEDIA_VIDEO,
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -49,6 +55,19 @@ class ActivityMain : AppCompatActivity() {
                 if(isNotEmpty())
                     this@ActivityMain.requestPermissions(this, 0)
             }
+
+        if(Build.VERSION.SDK_INT >= 30 && !Environment.isExternalStorageManager()) {
+            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+            startActivity(intent)
+        }
+
+//        val urisToModify = mutableListOf(Uri.fromFile(File("${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).absolutePath}/Camera")))
+//        val editPendingIntent = MediaStore.createWriteRequest(contentResolver,
+//            urisToModify)
+//
+//// Launch a system prompt requesting user permission for the operation.
+//        startIntentSenderForResult(editPendingIntent.intentSender, 8888,
+//            null, 0, 0, 0)
 
 
         profile.inflateDialog(this) {
@@ -66,7 +85,7 @@ class ActivityMain : AppCompatActivity() {
         vMaster.visibility = View.VISIBLE
 
         bStart.setOnClickListener {
-            val timeStartCamera = timer.time + 3000L
+            val timeStartCamera = timer.time + Globals.DELAY_LAUNCH_NOW
 
 //            Toast.makeText(this, "wird in ${3000L / 1000L}s starten", Toast.LENGTH_SHORT).show()
             registerStartCamera(profile.createStart(timeStartCamera))
@@ -110,17 +129,15 @@ class ActivityMain : AppCompatActivity() {
                 val time = timer.time
 
                 runOnUiThread {
-                    try {
-                        val modText = Globals.formatTimeToSeconds.format(Date(time)) +
-                            "\n\nKommando ${Profile.headerCommand[profile.command.ordinal]}" +
-                            "\nDauer ${profile.millisVideoLength / 1000L}s"
+                    val modText = Globals.formatTimeToSeconds.format(Date(time)) +
+                        "\n\nKommando: ${Profile.headerCommand[profile.command.ordinal]}" +
+                        "\nDauer: ${profile.millisVideoLength / 1000L}s"
 
-                        tText.text = modText
-                    } catch (_:Exception) {}
+                    tText.text = modText
                 }
 
                 //  start planned cameras
-                listPlannedCameraStarts.filter { it.timePreview - 3_000L < timer.time }.forEach { startCamera(it) }
+                listPlannedCameraStarts.filter { it.timePreview - Globals.BLOCKING_WINDOW < timer.time }.forEach { startCamera(it) }
 
                 Thread.sleep(50)
             }
